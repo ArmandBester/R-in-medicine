@@ -11,7 +11,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # Part 1, HIV in In Sub-Saharan Africa
 
-This 4 part series covers topics of HIV AIDS.  In this first part, we discuss the HIV pandemic in Sub-Saharan Africa.  In the coming sections, we will discuss a recent publication in [`PLoS ONE`](https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0213241).  The authors described how they used this cheap hardware to create a [`phylogenetic`](https://en.wikipedia.org/wiki/Phylogenetics) pipeline, tailored for the HIV drug resistance testing facility.  The third section will cover analysing inter- and intrapatient genetic distances of HIV genes using R.  In the final section, we will show how to use R to create distance matrix heat maps to visualize genetic distances.  But first, we need to understand the burden and challenges of HIV.
+This 4 part series covers topics of HIV AIDS.  In this first part, we discuss the HIV pandemic in Sub-Saharan Africa.  In the coming sections, we will discuss a recent publication in [`PLoS ONE`](https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0213241).  The authors described how they used affordable hardware to create a [`phylogenetic`](https://en.wikipedia.org/wiki/Phylogenetics) pipeline, tailored for the HIV drug resistance testing facility.  The third section will cover analysing inter- and intrapatient genetic distances of HIV genes using R.  In the final section, we will show how to use R to create distance matrix heat maps to visualize genetic distances.  But first, we need to understand the burden and challenges of HIV.
 
 ### Transmission
 
@@ -39,6 +39,7 @@ This being a blog about R, let's look at some ARV statistics and see if we can m
 library(dplyr)
 library(readr)
 library(stringr)
+library(tidyr)
 library(ggplot2)
 library(viridis)
 library(knitr)
@@ -112,7 +113,7 @@ ARV_cov.df %>%
 ```
 
 
-From the graph above we can see that South Africa has the highest infection rate and plenty of catchup to do.  It is great to see that Zimbabwe, a country in the limelight of various problems, has such a good ARV program.
+From the graph above we can see that South Africa has the highest infection rate and plenty of catchup to do.  It is great to see that Zimbabwe, a country in the limelight for various problems, has such a good ARV program.
 
 ```{r}
 
@@ -123,6 +124,98 @@ ARV_cov.df %>%
 
 
 ```
+
+
+We can also look at HIV related deaths. [`Data`](http://apps.who.int/gho/data/node.main.623?lang=en)
+
+```{r}
+HIV_mort <- read_csv("HIV deaths.csv", col_names = TRUE)
+head(HIV_mort)
+
+
+
+# Remove the ranges in brackets and convert the values to intigers
+
+HIV_mort <- HIV_mort %>% 
+  na_if("No data") %>% 
+  mutate(Deaths_2017 = str_replace_all(Deaths_2017, "\\[.*?\\]", "")) %>% 
+  mutate(Deaths_2010 = str_replace_all(Deaths_2010, "\\[.*?\\]", "")) %>% 
+  mutate(Deaths_2005 = str_replace_all(Deaths_2005, "\\[.*?\\]", "")) %>% 
+  mutate(Deaths_2000 = str_replace_all(Deaths_2000, "\\[.*?\\]", "")) %>% 
+
+  mutate(Deaths_2017 = str_replace_all(Deaths_2017, "<", "")) %>% 
+  mutate(Deaths_2010 = str_replace_all(Deaths_2010, "<", "")) %>% 
+  mutate(Deaths_2005 = str_replace_all(Deaths_2005, "<", "")) %>% 
+  mutate(Deaths_2000 = str_replace_all(Deaths_2000, "<", "")) %>% 
+
+  mutate(Deaths_2017 = str_replace_all(Deaths_2017, " ", "")) %>% 
+  mutate(Deaths_2010 = str_replace_all(Deaths_2010, " ", "")) %>% 
+  mutate(Deaths_2005 = str_replace_all(Deaths_2005, " ", "")) %>% 
+  mutate(Deaths_2000 = str_replace_all(Deaths_2000, " ", "")) %>% 
+  
+  mutate(Deaths_2017 = as.double(Deaths_2017)) %>% 
+  mutate(Deaths_2010 = as.double(Deaths_2010)) %>% 
+  mutate(Deaths_2005 = as.double(Deaths_2005)) %>% 
+  mutate(Deaths_2000 = as.double(Deaths_2000))
+
+# select only the countries we need
+HIV_mort <- HIV_mort[HIV_mort$Country %in% ssa.list, ]
+
+head(HIV_mort)
+
+```
+
+
+The above dataframe is now clean and we can do some sniffing around to get more insights.
+
+```{r}
+summary(HIV_mort)
+```
+
+From the table above we can see that the mean for the dataset as a whole is about half of that during the early 2000s.  It would be interesting to plot this data, but as it will probably be to bussy as it is.  We can have a look at countries which had the most change rather.
+
+```{r}
+
+HIV_mort <- HIV_mort %>% 
+  mutate(min = apply(HIV_mort[, 2:4], 1, FUN = min)) %>% 
+  mutate(max  = apply(HIV_mort[, 2:4], 1, FUN = max)) %>% 
+  mutate(Change = max - min)
+
+```
+
+
+
+
+
+```{r}
+
+HIV_mort %>% 
+  top_n(10, wt = Change) %>% 
+  gather(Year, Deaths, Deaths_2017:Deaths_2000) %>% 
+  na.omit() %>% 
+  separate(Year, c("D", "Year"), sep = "_", convert = TRUE) %>% 
+  ggplot(aes(x = Year, y = Deaths, color = Country))+
+  geom_line()+
+  geom_vline(xintercept = 2004, color = "black", linetype  = "dotted")+
+  theme_bw()+
+  theme(legend.position = "bottom")
+  
+```
+
+
+
+Remeber we mentioned that HAART was introduced in 2004 in South Africa, depicted here by the blue dotted line.  It is easy to appreciate the dramatic effect the introduction of ARVs had in South Africa.
+
+
+
+
+
+
+
+
+
+
+
 
 
 
