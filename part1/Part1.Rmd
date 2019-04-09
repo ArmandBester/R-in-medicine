@@ -1,0 +1,141 @@
+---
+title: "Part 1 - HIV in Africa"
+author: "Armand"
+date: "08 April 2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Part 1, HIV in In Sub-Saharan Africa
+
+This 4 part series covers topics of HIV AIDS.  In this first part, we discuss the HIV pandemic in Sub-Saharan Africa.  In the coming sections, we will discuss a recent publication in [`PLoS ONE`](https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0213241).  The authors described how they used this cheap hardware to create a [`phylogenetic`](https://en.wikipedia.org/wiki/Phylogenetics) pipeline, tailored for the HIV drug resistance testing facility.  The third section will cover analysing inter- and intrapatient genetic distances of HIV genes using R.  In the final section, we will show how to use R to create distance matrix heat maps to visualize genetic distances.  But first, we need to understand the burden and challenges of HIV.
+
+### Transmission
+
+HIV is transmitted mainly by 
+
+- Having unprotected sex.
+- Non-sterile needles in drug use or sharing needles.
+- Mother to child transmission during birth or breastfeeding.
+- Infected blood transfusions, transplants or other medical procedures. However, this is very unlikely.
+
+
+### Treatment
+
+
+The good news, however, is that if a person receives Antiretroviral (ARV) treatment, their viral load suppress and the chance of transmission drastically decreases.  This raises the question, 30 years into this pandemic, why is HIV still a problem?
+
+
+Politics, stigma and stupidity aside.  Not all countries adopted the use of ARVs in an equal manner.  In South Africa, not all patients were eligible for receiving ARVs.  The first death from AIDS in South Africa was in 1985.  Although AZT (Zidovudine) was the first drug to be approved by the [`FDA`](https://www.fda.gov/forpatients/illness/hivaids/history/ucm151074.htm) in March 1987, it was soon discovered that monotherapy with only AZT was not effective for very long as the virus developed resistance to the medicine quickly.  Since then ARVs have come a long way and patients are placed on HAART (Highly Active Antiretroviral Treatment) or cART (combination Antiretroviral Treatment) which typically consists of 3 drugs of different classes.  Only in 2004 ARVs became publicly available in South Africa and still not all HIV infected patients were eligible.  Ideally, a country would have all it's HIV infected people on treatment, but due to financial constraints, this is not always possible.  In South Africa patients where only initialized on ARVs when their CD4 counts dropped below a certain level.  This threshold was initially 200 cells/mL in 2004 which was then changed to 350 cells/mL and 500 cell/mL in later intervals.  These recommendations were a compromise between the availability of funds and getting ARVs to the people needing it the most.  These CD4 cells are a major component of the immune system, the lower the CD4 cell count the higher the chance for opportunistic infections.  Thus, the idea is to support the patients who are most likely to contract an opportunistic infection.  The problem with this was that about only a third of the infected people in South Africa were receiving HAART treatment.  In 2017 the guidelines changed to test and treat.  Any newly diagnosed patient will receive HAART treatment.  This is a big improvement for many reasons, but notably a lower infection rate.  If a patient is taking HAART treatment and it is effective in suppressing the viral replication, the chances of the patient transmitting the virus are very close to zero.  However, these treatments are not without side effects which in some cases causes very poor adherence to the treatment.  There are numerous factors to blame here, but socio-economic factors and depression are worth mentioning.  There is also ignorance and the 'fear of knowing' which causes people not to know their status.  Finally, the x-factor or human nature brings with it various other complexities such as conspiracy theories, religious and personal beliefs.  This will be a very long post if we delve into all the issues, the take home: the situation is complicated.
+
+This being a blog about R, let's look at some ARV statistics and see if we can make any conclusions.
+
+
+```{r }
+
+library(dplyr)
+library(readr)
+library(stringr)
+library(ggplot2)
+library(viridis)
+library(knitr)
+library(kableExtra)
+```
+
+
+Read in the data.
+
+```{r}
+ARV_cov.df <- read_csv("ARV cov 2017.csv", col_names = TRUE)
+
+# A list of Sub-Saharan countries
+
+ssa.list <- (read_csv("Sub-Saharan.txt", col_names = FALSE)[["X1"]])
+
+head(ARV_cov.df)
+```
+
+[`Data`](http://apps.who.int/gho/data/node.main.626)
+
+There is a couple of issues with this data.
+- Very long variable names, discriptive, but difficult to work with
+- The values contains confidance intervals in brackets, this will be difficult to work with as is
+- We might want to transform no data to NA
+- We are interested in Sub-Saharan Africa, but the data is for the whole world
+
+
+Luckily for us, this is a post about R. Fixing the above issues should be a breeze.
+
+
+```{r}
+# rename the variables
+colnames(ARV_cov.df) <- c("Country", "PersCov", "NumberOnARV", "NumberInfected")
+
+# Remove the ranges in brackets and convert the values to intigers
+
+ARV_cov.df <- ARV_cov.df %>% 
+  na_if("No data") %>% 
+  mutate(PersCov = str_replace_all(PersCov, "\\[.*?\\]", "")) %>% 
+  mutate(NumberInfected = str_replace_all(NumberInfected, "\\[.*?\\]", "")) %>% 
+  mutate(NumberInfected = str_replace_all(NumberInfected, "<", "")) %>%
+  mutate(NumberInfected = str_replace_all(NumberInfected, " ", "")) %>%
+  mutate(PersCov = as.double(PersCov)) %>% 
+  mutate(NumberOnARV = as.double(NumberOnARV)) %>% 
+  mutate(NumberInfected = as.double(NumberInfected))
+
+# select only the countries we need
+
+ARV_cov.df <- ARV_cov.df[ARV_cov.df$Country %in% ssa.list, ]
+
+head(ARV_cov.df)
+```
+
+In the code above we renamed the column headers to Country, PersCov (percentage ARV coverage), NumberOnARv (Number of patients on ARVs) and NumberInfected (Number of patients infected).  We used a regular expression to get rid of all the ranges.  We remove the "<" sign and spaces within numbers.  Changed "No data" to NA and converted the characters to numbers. We filtered out the countries we don't want.  Note some countries are not available in the ARV data, like Swaziland and Reunion.
+
+
+Let's see how these countries rank by ARV coverage
+
+```{r, fig.width=8, fig.height=6}
+ARV_cov.df %>% 
+  na.omit(PersCov) %>% 
+  ggplot(aes(x = reorder(Country, PersCov), y = PersCov, fill = log10(NumberInfected)))+
+  scale_fill_viridis(name = "Log10 number infected")+
+  geom_col()+
+  coord_flip()+
+  ylab("% ARV coverage") + xlab("Country")+
+  theme_bw()
+
+
+```
+
+
+From the graph above we can see that South Africa has the highest infection rate and plenty of catchup to do.  It is great to see that Zimbabwe, a country in the limelight of various problems, has such a good ARV program.
+
+```{r}
+
+ARV_cov.df %>% 
+  filter(NumberInfected >= max(ARV_cov.df$NumberInfected, na.rm = TRUE)) %>% 
+  kable(format = "html", caption = "Country with the highest HIV infection") %>% 
+  kable_styling(bootstrap_options = c("striped", "hover"))
+
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
