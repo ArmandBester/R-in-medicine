@@ -44,6 +44,9 @@ library(ggplot2)
 library(viridis)
 library(knitr)
 library(kableExtra)
+library(leaflet)
+library(maptools)
+library(RColorBrewer)
 ```
 
 
@@ -79,13 +82,13 @@ colnames(ARV_cov.df) <- c("Country", "PersCov", "NumberOnARV", "NumberInfected")
 
 ARV_cov.df <- ARV_cov.df %>% 
   na_if("No data") %>% 
-  mutate(PersCov = str_replace_all(PersCov, "\\[.*?\\]", "")) %>% 
-  mutate(NumberInfected = str_replace_all(NumberInfected, "\\[.*?\\]", "")) %>% 
-  mutate(NumberInfected = str_replace_all(NumberInfected, "<", "")) %>%
-  mutate(NumberInfected = str_replace_all(NumberInfected, " ", "")) %>%
-  mutate(PersCov = as.double(PersCov)) %>% 
-  mutate(NumberOnARV = as.double(NumberOnARV)) %>% 
-  mutate(NumberInfected = as.double(NumberInfected))
+  mutate(PersCov = str_replace_all(PersCov, "\\[.*?\\]", ""),
+         NumberInfected = str_replace_all(NumberInfected, "\\[.*?\\]", ""),
+         NumberInfected = str_replace_all(NumberInfected, "<", ""),
+         NumberInfected = str_replace_all(NumberInfected, " ", ""),
+         PersCov = as.double(PersCov),
+         NumberOnARV = as.double(NumberOnARV),
+         NumberInfected = as.double(NumberInfected))
 
 # select only the countries we need
 
@@ -138,27 +141,29 @@ head(HIV_mort)
 
 # Remove the ranges in brackets and convert the values to intigers
 
+
+
 HIV_mort <- HIV_mort %>% 
   na_if("No data") %>% 
-  mutate(Deaths_2017 = str_replace_all(Deaths_2017, "\\[.*?\\]", "")) %>% 
-  mutate(Deaths_2010 = str_replace_all(Deaths_2010, "\\[.*?\\]", "")) %>% 
-  mutate(Deaths_2005 = str_replace_all(Deaths_2005, "\\[.*?\\]", "")) %>% 
-  mutate(Deaths_2000 = str_replace_all(Deaths_2000, "\\[.*?\\]", "")) %>% 
+  mutate(Deaths_2017 = str_replace_all(Deaths_2017, "\\[.*?\\]", ""),
+         Deaths_2010 = str_replace_all(Deaths_2010, "\\[.*?\\]", ""),
+         Deaths_2005 = str_replace_all(Deaths_2005, "\\[.*?\\]", ""),
+         Deaths_2000 = str_replace_all(Deaths_2000, "\\[.*?\\]", ""),
 
-  mutate(Deaths_2017 = str_replace_all(Deaths_2017, "<", "")) %>% 
-  mutate(Deaths_2010 = str_replace_all(Deaths_2010, "<", "")) %>% 
-  mutate(Deaths_2005 = str_replace_all(Deaths_2005, "<", "")) %>% 
-  mutate(Deaths_2000 = str_replace_all(Deaths_2000, "<", "")) %>% 
+         Deaths_2017 = str_replace_all(Deaths_2017, "<", ""),
+         Deaths_2010 = str_replace_all(Deaths_2010, "<", ""),
+         Deaths_2005 = str_replace_all(Deaths_2005, "<", ""),
+         Deaths_2000 = str_replace_all(Deaths_2000, "<", ""),
 
-  mutate(Deaths_2017 = str_replace_all(Deaths_2017, " ", "")) %>% 
-  mutate(Deaths_2010 = str_replace_all(Deaths_2010, " ", "")) %>% 
-  mutate(Deaths_2005 = str_replace_all(Deaths_2005, " ", "")) %>% 
-  mutate(Deaths_2000 = str_replace_all(Deaths_2000, " ", "")) %>% 
+         Deaths_2017 = str_replace_all(Deaths_2017, " ", ""),
+         Deaths_2010 = str_replace_all(Deaths_2010, " ", ""),
+         Deaths_2005 = str_replace_all(Deaths_2005, " ", ""),
+         Deaths_2000 = str_replace_all(Deaths_2000, " ", ""),
   
-  mutate(Deaths_2017 = as.double(Deaths_2017)) %>% 
-  mutate(Deaths_2010 = as.double(Deaths_2010)) %>% 
-  mutate(Deaths_2005 = as.double(Deaths_2005)) %>% 
-  mutate(Deaths_2000 = as.double(Deaths_2000))
+         Deaths_2017 = as.double(Deaths_2017),
+         Deaths_2010 = as.double(Deaths_2010),
+         Deaths_2005 = as.double(Deaths_2005),
+         Deaths_2000 = as.double(Deaths_2000))
 
 # select only the countries we need
 HIV_mort <- HIV_mort[HIV_mort$Country %in% ssa.list, ]
@@ -196,7 +201,7 @@ HIV_mort %>%
   top_n(10, wt = Change) %>% 
   gather(Year, Deaths, Deaths_2017:Deaths_2000) %>% 
   na.omit() %>% 
-  separate(Year, c("D", "Year"), sep = "_", convert = TRUE) %>% 
+  separate(Year, c("D", "Year"), sep = "_", convert = TRUE) %>% # I should be able to use NA rather than D, but get an error
   ggplot(aes(x = Year, y = Deaths, color = Country))+
   geom_line()+
   geom_vline(xintercept = 2004, color = "black", linetype  = "dotted")+
@@ -207,7 +212,57 @@ HIV_mort %>%
 
 
 
-Remember we mentioned that HAART was introduced in 2004 in South Africa, depicted here by the black dotted line.  It is easy to appreciate the dramatic effect the introduction of ARVs had in South Africa.  All tough, the picture above is positive, the fight is not over.  The target is to get at least 90% of HIV infected patients on treatment.  Adherence to ARV regimens stays crucial not only to suppress viral replication, but also to minimize development of drug resistance.  In the next section we will talk more about drug resistance and how sequencing viral genes reveal which drugs a patient will still respond to.
+Remember we mentioned that HAART was introduced in 2004 in South Africa, depicted here by the black dotted line.  It is easy to appreciate the dramatic effect the introduction of ARVs had in South Africa.  Although, the picture above is positive, the fight is not over.  The target is to get at least 90% of HIV infected patients on treatment.  Adherence to ARV regimens stays crucial not only to suppress viral replication, but also to minimize development of drug resistance. 
+
+
+We have now looked countries ranked by ARV coverage and we have seen the impact of the introduction of ARVs.  
+
+
+We can also look at the rates of HIV infection in different African countries.  
+
+**I think we should rather do this with leaflet.** But, the idea of what to expect.
+
+[`Data`](https://www.cia.gov/LIBRARY/publications/the-world-factbook/rankorder/rawdata_2155.txt)
+
+```{r}
+
+HIV_rate_2016 <- read_csv("HIV rates.csv", col_names = TRUE)
+
+# read in the shape file
+africa.shp <- readShapeSpatial("Africa_SHP/Africa.shp")
+# permit the use for gpclib
+gpclibPermit()
+
+# convert the shape file to a dataframe
+africa.shp.f <- fortify(africa.shp, region = "COUNTRY")
+
+# merge prevelance data
+merge.shp.coef <- merge(africa.shp.f, HIV_rate_2016, by.x = "id", by.y = "Country", all.x=TRUE)
+
+# correctly order the polygon data
+final.plot <- merge.shp.coef[order(merge.shp.coef$order), ] 
+
+ggplot()+
+  geom_polygon(data = final.plot,
+               aes(x = long, y = lat, group = group, fill = final.plot$Rate),
+               color = "black", size = 0.2)+
+  coord_map()+
+  scale_fill_distiller(palette = "Greens", direction = 1, name = "")+
+  theme(panel.background = element_blank(), axis.text = element_blank(),
+        axis.title = element_blank(), axis.ticks = element_blank())
+```
+
+
+
+
+
+
+
+
+
+
+
+In the next section we will talk more about drug resistance and how sequencing viral genes reveal which drugs a patient will still respond to.
 
 
 
