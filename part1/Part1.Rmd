@@ -62,7 +62,7 @@ head(ARV_cov.df)
 [`Data`](http://apps.who.int/gho/data/node.main.626)
 
 There is a couple of issues with this data.
-- Very long variable names, discriptive, but difficult to work with
+- Very long variable names, descriptive, but difficult to work with
 - The values contains confidance intervals in brackets, this will be difficult to work with as is
 - We might want to transform no data to NA
 - We are interested in Sub-Saharan Africa, but the data is for the whole world
@@ -126,6 +126,8 @@ ARV_cov.df %>%
 ```
 
 
+### HIV related deaths
+
 We can also look at HIV related deaths. [`Data`](http://apps.who.int/gho/data/node.main.623?lang=en)
 
 ```{r}
@@ -172,7 +174,7 @@ The above dataframe is now clean and we can do some sniffing around to get more 
 summary(HIV_mort)
 ```
 
-From the table above we can see that the mean for the dataset as a whole is about half of that during the early 2000s.  It would be interesting to plot this data, but as it will probably be to bussy as it is.  We can have a look at countries which had the most change rather.
+From the table above we can see that the 2017 mean for the dataset as a whole is about half of that during the early 2000s.  It would be interesting to plot this data, but as it will probably be to busy as it is.  We can have a look at countries which had the most change rather.
 
 ```{r}
 
@@ -184,6 +186,7 @@ HIV_mort <- HIV_mort %>%
 ```
 
 
+Next we can create a plot of the data and look at the top 10 countries with the biggest change in HIV related mortality.
 
 
 
@@ -204,7 +207,7 @@ HIV_mort %>%
 
 
 
-Remeber we mentioned that HAART was introduced in 2004 in South Africa, depicted here by the blue dotted line.  It is easy to appreciate the dramatic effect the introduction of ARVs had in South Africa.
+Remember we mentioned that HAART was introduced in 2004 in South Africa, depicted here by the black dotted line.  It is easy to appreciate the dramatic effect the introduction of ARVs had in South Africa.  All tough, the picture above is positive, the fight is not over.  The target is to get at least 90% of HIV infected patients on treatment.  Adherence to ARV regimens stays crucial not only to suppress viral replication, but also to minimize development of drug resistance.  In the next section we will talk more about drug resistance and how sequencing viral genes reveal which drugs a patient will still respond to.
 
 
 
