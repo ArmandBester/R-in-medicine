@@ -48,6 +48,7 @@ library(ggplot2)
 library(knitr)
 library(kableExtra)
 library(maptools)
+library(viridis)
 library(RColorBrewer)
 ```
 
