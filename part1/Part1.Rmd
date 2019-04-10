@@ -68,10 +68,11 @@ head(ARV_cov.df)
 [`Data`](http://apps.who.int/gho/data/node.main.626)
 
 There is a couple of issues with this data.
-- Very long variable names, descriptive, but difficult to work with
-- The values contains confidance intervals in brackets, this will be difficult to work with as is
-- We might want to transform no data to NA
-- We are interested in Sub-Saharan Africa, but the data is for the whole world
+
+ - Very long variable names, descriptive, but difficult to work with
+ - The values contain confidance intervals in brackets, this will be difficult to work with as is
+ - We might want to transform no data to NA
+ - We are interested in Sub-Saharan Africa, but the data is for the whole world
 
 
 Luckily for us, this is a post about R. Fixing the above issues should be a breeze.
@@ -100,7 +101,7 @@ ARV_cov.df <- ARV_cov.df[ARV_cov.df$Country %in% ssa.list, ]
 head(ARV_cov.df)
 ```
 
-In the code above we renamed the column headers to Country, PersCov (percentage ARV coverage), NumberOnARv (Number of patients on ARVs) and NumberInfected (Number of patients infected).  We used a regular expression to get rid of all the ranges.  We remove the "<" sign and spaces within numbers.  Changed "No data" to NA and converted the characters to numbers. We filtered out the countries we don't want.  Note some countries are not available in the ARV data, like Swaziland and Reunion.
+In the code above we renamed the column headers to Country, PersCov (percentage ARV coverage), NumberOnARv (Number of patients on ARVs) and NumberInfected (Number of patients infected).  We used a regular expression to get rid of all the ranges.  We removed the "<" sign and spaces within numbers.  Changed "No data" to NA and converted the characters to numbers. We filtered out the countries we don't want.  Note some countries are not available in the ARV data, like Swaziland and Reunion.
 
 
 Let's see how these countries rank by ARV coverage
@@ -218,7 +219,7 @@ HIV_mort %>%
 Remember we mentioned that HAART was introduced in 2004 in South Africa, depicted here by the black dotted line.  It is easy to appreciate the dramatic effect the introduction of ARVs had in South Africa.  Although, the picture above is positive, the fight is not over.  The target is to get at least 90% of HIV infected patients on treatment.  Adherence to ARV regimens stays crucial not only to suppress viral replication, but also to minimize development of drug resistance. 
 
 
-We have now looked countries ranked by ARV coverage and we have seen the impact of the introduction of ARVs.  
+We have now looked at countries ranked by ARV coverage and we have seen the impact of the introduction of ARVs.  
 
 
 We can also look at the rates of HIV infection in different African countries.  
