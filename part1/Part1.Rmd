@@ -15,6 +15,8 @@ This 4 part series covers topics of HIV AIDS.  In this first part, we discuss th
 
 ### Transmission
 
+Worldwide, approximately 36.9 million (UNAIDS) people are living with HIV. 
+
 HIV is transmitted mainly by 
 
 - Having unprotected sex.
@@ -26,10 +28,12 @@ HIV is transmitted mainly by
 ### Treatment
 
 
-The good news, however, is that if a person receives Antiretroviral (ARV) treatment, their viral load suppress and the chance of transmission drastically decreases.  This raises the question, 30 years into this pandemic, why is HIV still a problem?
+HIV is treatable but not (yet) curable. The good news however, is that if a person receives Antiretroviral (ARV) treatment, their viral load suppresses and the chance of transmitting HIV, drastically decreases. So 30 years into this pandemic, the big question is, why is HIV still a problem?
 
 
-Politics, stigma and stupidity aside.  Not all countries adopted the use of ARVs in an equal manner.  In South Africa, not all patients were eligible for receiving ARVs.  The first death from AIDS in South Africa was in 1985.  Although AZT (Zidovudine) was the first drug to be approved by the [`FDA`](https://www.fda.gov/forpatients/illness/hivaids/history/ucm151074.htm) in March 1987, it was soon discovered that monotherapy with only AZT was not effective for very long as the virus developed resistance to the medicine quickly.  Since then ARVs have come a long way and patients are placed on HAART (Highly Active Antiretroviral Treatment) or cART (combination Antiretroviral Treatment) which typically consists of 3 drugs of different classes.  Only in 2004 ARVs became publicly available in South Africa and still not all HIV infected patients were eligible.  Ideally, a country would have all it's HIV infected people on treatment, but due to financial constraints, this is not always possible.  In South Africa patients where only initialized on ARVs when their CD4 counts dropped below a certain level.  This threshold was initially 200 cells/mL in 2004 which was then changed to 350 cells/mL and 500 cell/mL in later intervals.  These recommendations were a compromise between the availability of funds and getting ARVs to the people needing it the most.  These CD4 cells are a major component of the immune system, the lower the CD4 cell count the higher the chance for opportunistic infections.  Thus, the idea is to support the patients who are most likely to contract an opportunistic infection.  The problem with this was that about only a third of the infected people in South Africa were receiving HAART treatment.  In 2017 the guidelines changed to test and treat.  Any newly diagnosed patient will receive HAART treatment.  This is a big improvement for many reasons, but notably a lower infection rate.  If a patient is taking HAART treatment and it is effective in suppressing the viral replication, the chances of the patient transmitting the virus are very close to zero.  However, these treatments are not without side effects which in some cases causes very poor adherence to the treatment.  There are numerous factors to blame here, but socio-economic factors and depression are worth mentioning.  There is also ignorance and the 'fear of knowing' which causes people not to know their status.  Finally, the x-factor or human nature brings with it various other complexities such as conspiracy theories, religious and personal beliefs.  This will be a very long post if we delve into all the issues, the take home: the situation is complicated.
+Politics, stigma and stupidity aside.  Not all countries adopted the use of ARVs in an equal manner.  In South Africa, not all patients were eligible for receiving ARVs.  The first death from AIDS in South Africa was in 1985.  Although AZT (Zidovudine) was the first drug to be approved by the [`FDA`](https://www.fda.gov/forpatients/illness/hivaids/history/ucm151074.htm) in March 1987, it was soon discovered that monotherapy with only AZT was not effective for very long as the virus developed resistance to the medicine quickly.  Since then ARVs have come a long way and patients are placed on HAART (Highly Active Antiretroviral Treatment) or cART (combination Antiretroviral Treatment) which typically consists of 3 drugs of different classes.  
+
+In South Africa, the first AIDS-related death occurred in 1985. Not all patients were eligible to receive ARVs and it was only in 2004 that ARVs became publicly available in South Africa. Eligibility restriction still applied so not all HIV infected patients received treatment. Ideally, a country would have all it’s HIV infected people on treatment, but due to financial constraints, this is not always possible. In South Africa patients where only initialized on ARVs when their CD4 counts dropped below a certain level. This threshold was initially 200 cells/mL in 2004 which was then changed to 350 cells/mL and 500 cell/mL at later intervals. These recommendations were a compromise between the availability of funds and getting ARVs to the people needing it the most. CD4 cells are a major component of the immune system; the lower the CD4 cell count the higher the chance for opportunistic infections. Thus, the idea is to support the patients who are most likely to contract an opportunistic infection. The problem with this was that about only a third of the HIV infected people in South Africa were receiving HAART treatment. In 2017 the guidelines changed to test and treat, i.e. any newly diagnosed patient will receive HAART treatment. This is a big improvement for many reasons, but notably a lower infection rate. If a patient is taking HAART treatment and it is effective in suppressing the viral replication, the chances of the patient transmitting the virus are very close to zero. However, these treatments are not without side effects which in some cases causes very poor adherence to the treatment. There are numerous factors to blame here, but socio-economic factors and depression are worth mentioning. There is also ignorance and the ‘fear of knowing’ which causes people not to know their status. Finally, the x-factor or human nature brings with it various other complexities such as conspiracy theories, religious and personal beliefs. This will be a very long post if we delve into all the issues, the take home: the situation is complicated.
 
 This being a blog about R, let's look at some ARV statistics and see if we can make any conclusions.
 
@@ -41,10 +45,8 @@ library(readr)
 library(stringr)
 library(tidyr)
 library(ggplot2)
-library(viridis)
 library(knitr)
 library(kableExtra)
-library(leaflet)
 library(maptools)
 library(RColorBrewer)
 ```
@@ -220,43 +222,36 @@ We have now looked countries ranked by ARV coverage and we have seen the impact 
 
 We can also look at the rates of HIV infection in different African countries.  
 
-**I think we should rather do this with leaflet.** But, the idea of what to expect.
+
+The world fact book  by the CIA has some HIV infection rate data.
 
 [`Data`](https://www.cia.gov/LIBRARY/publications/the-world-factbook/rankorder/rawdata_2155.txt)
 
+
+
 ```{r}
-
+# load the HIV data
 HIV_rate_2016 <- read_csv("HIV rates.csv", col_names = TRUE)
+#read in the shape file 
+africa <- readShapeSpatial("Africa_SHP/Africa.shp") %>% 
+  fortify(africa.shp, region = "COUNTRY") %>% 
+  merge(HIV_rate_2016, by.x = "id", by.y = "Country", all.x=TRUE) %>% 
+  arrange(order)
 
-# read in the shape file
-africa.shp <- readShapeSpatial("Africa_SHP/Africa.shp")
-# permit the use for gpclib
-gpclibPermit()
+africa %>%   
+  ggplot()+
+    geom_polygon(aes(x = long, y = lat, group = group, fill = Rate),
+                 color = "black", size = 0.2)+
+    coord_map()+
+    scale_fill_distiller(palette = "Greens", direction = 1, name = "% HIV infection rate") +
+    theme(panel.background = element_blank(), axis.text = element_blank(),
+          axis.title = element_blank(), axis.ticks = element_blank())
 
-# convert the shape file to a dataframe
-africa.shp.f <- fortify(africa.shp, region = "COUNTRY")
 
-# merge prevelance data
-merge.shp.coef <- merge(africa.shp.f, HIV_rate_2016, by.x = "id", by.y = "Country", all.x=TRUE)
 
-# correctly order the polygon data
-final.plot <- merge.shp.coef[order(merge.shp.coef$order), ] 
-
-ggplot()+
-  geom_polygon(data = final.plot,
-               aes(x = long, y = lat, group = group, fill = final.plot$Rate),
-               color = "black", size = 0.2)+
-  coord_map()+
-  scale_fill_distiller(palette = "Greens", direction = 1, name = "")+
-  theme(panel.background = element_blank(), axis.text = element_blank(),
-        axis.title = element_blank(), axis.ticks = element_blank())
 ```
 
-
-
-
-
-
+As we can see from the map above, for some countries we have no data.  We have used R to sketch some ideas regarding this pandemic.  From our ARV coverage data and the plot showing the effect of ARV on HIV related deaths we can see that change is happening.  However, the choropleth above shows that we still have a long way to go to control this outbreak.
 
 
 
