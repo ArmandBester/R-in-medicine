@@ -51,7 +51,7 @@ library(maptools)
 library(viridis)
 library(RColorBrewer)
 library(mapproj)
-library(sf)
+#library(sf)
 ```
 
 
@@ -97,8 +97,8 @@ clean_deaths <- function(x){
 ARV_cov.df <- ARV_cov.df %>% 
   na_if("No data") %>% 
   mutate(PersCov = clean_deaths(PersCov),
-         NumberOnARV = as.double(NumberOnARV),
-         NumberInfected = as.double(NumberInfected)) %>% 
+         NumberInfected = clean_deaths(NumberInfected), 
+         NumberOnARV = as.double(NumberOnARV))  %>% 
   filter(Country %in% ssa.list)
 
 head(ARV_cov.df)
@@ -228,21 +228,21 @@ africa %>%
 ```
 
 ```{r}
-# load the HIV data
-HIV_rate_2016 <- read_csv("HIV rates.csv", col_names = TRUE)
-
-# read in the shape file
-
-africa <- 
-  sf::st_read("Africa_SHP/Africa.shp") %>%
-  left_join(HIV_rate_2016, by = c(COUNTRY = "Country"))
-
-africa %>%
-  ggplot() +
-  geom_sf(aes(fill = Rate)) +
-  scale_fill_distiller(palette = "Reds", direction = 1, name = "% HIV infection rate") +
-  coord_sf() +
-  theme_minimal()
+# # load the HIV data
+#  HIV_rate_2016 <- read_csv("HIV rates.csv", col_names = TRUE)
+# 
+# # read in the shape file
+# 
+# africa <- 
+#  sf::st_read("Africa_SHP/Africa.shp") %>%
+#  left_join(HIV_rate_2016, by = c(COUNTRY = "Country"))
+# 
+# africa %>%
+#  ggplot() +
+#  geom_sf(aes(fill = Rate)) +
+#  scale_fill_distiller(palette = "Reds", direction = 1, name = "% HIV infection rate") +
+#  coord_sf() +
+#  theme_minimal()
 ```
 
 As we can see from the map above, for some countries we have no data.  We have used R to sketch some ideas regarding this pandemic.  From our ARV coverage data and the plot showing the effect of ARV on HIV related deaths we can see that change is happening.  However, the choropleth above shows that we still have a long way to go to control this outbreak.
