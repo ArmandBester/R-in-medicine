@@ -50,6 +50,8 @@ library(kableExtra)
 library(maptools)
 library(viridis)
 library(RColorBrewer)
+library(mapproj)
+library(sf)
 ```
 
 
@@ -82,21 +84,22 @@ Luckily for us, this is a post about R. Fixing the above issues should be a bree
 # rename the variables
 colnames(ARV_cov.df) <- c("Country", "PersCov", "NumberOnARV", "NumberInfected")
 
-# Remove the ranges in brackets and convert the values to intigers
+
+clean_deaths <- function(x){
+  # Remove the ranges in brackets and convert the values to integers
+  x %>% 
+    str_replace_all("\\[.*?\\]", "") %>% 
+    str_replace_all("<", "") %>%
+    str_replace_all(" ", "") %>% 
+    as.numeric()
+}
 
 ARV_cov.df <- ARV_cov.df %>% 
   na_if("No data") %>% 
-  mutate(PersCov = str_replace_all(PersCov, "\\[.*?\\]", ""),
-         NumberInfected = str_replace_all(NumberInfected, "\\[.*?\\]", ""),
-         NumberInfected = str_replace_all(NumberInfected, "<", ""),
-         NumberInfected = str_replace_all(NumberInfected, " ", ""),
-         PersCov = as.double(PersCov),
+  mutate(PersCov = clean_deaths(PersCov),
          NumberOnARV = as.double(NumberOnARV),
-         NumberInfected = as.double(NumberInfected))
-
-# select only the countries we need
-
-ARV_cov.df <- ARV_cov.df[ARV_cov.df$Country %in% ssa.list, ]
+         NumberInfected = as.double(NumberInfected)) %>% 
+  filter(Country %in% ssa.list)
 
 head(ARV_cov.df)
 ```
@@ -107,29 +110,24 @@ In the code above we renamed the column headers to Country, PersCov (percentage 
 Let's see how these countries rank by ARV coverage
 
 ```{r, fig.width=8, fig.height=6}
-ARV_cov.df %>% 
-  na.omit(PersCov) %>% 
-  ggplot(aes(x = reorder(Country, PersCov), y = PersCov, fill = log10(NumberInfected)))+
-  scale_fill_viridis(name = "Log10 number infected")+
-  geom_col()+
-  coord_flip()+
-  ylab("% ARV coverage") + xlab("Country")+
+ARV_cov.df %>%
+  na.omit(PersCov) %>%
+  ggplot(aes(x = reorder(Country, PersCov), y = PersCov)) +
+  geom_point(aes(colour = NumberInfected), size = 3) +
+  scale_colour_viridis(name = "Number of people infected", trans = "log10") +
+  coord_flip() +
+  ylab("% ARV coverage") + xlab("Country") +
   theme_bw()
-
-
 ```
 
 
 From the graph above we can see that South Africa has the highest infection rate and plenty of catchup to do.  It is great to see that Zimbabwe, a country in the limelight for various problems, has such a good ARV program.
 
 ```{r}
-
 ARV_cov.df %>% 
   filter(NumberInfected >= max(ARV_cov.df$NumberInfected, na.rm = TRUE)) %>% 
   kable(format = "html", caption = "Country with the highest HIV infection") %>% 
   kable_styling(bootstrap_options = c("striped", "hover"))
-
-
 ```
 
 
@@ -138,39 +136,12 @@ ARV_cov.df %>%
 We can also look at HIV related deaths. [`Data`](http://apps.who.int/gho/data/node.main.623?lang=en)
 
 ```{r}
-HIV_mort <- read_csv("HIV deaths.csv", col_names = TRUE)
-head(HIV_mort)
 
-
-
-# Remove the ranges in brackets and convert the values to intigers
-
-
-
-HIV_mort <- HIV_mort %>% 
+HIV_mort <- 
+  read_csv("HIV deaths.csv", col_types = "ccccc") %>% 
   na_if("No data") %>% 
-  mutate(Deaths_2017 = str_replace_all(Deaths_2017, "\\[.*?\\]", ""),
-         Deaths_2010 = str_replace_all(Deaths_2010, "\\[.*?\\]", ""),
-         Deaths_2005 = str_replace_all(Deaths_2005, "\\[.*?\\]", ""),
-         Deaths_2000 = str_replace_all(Deaths_2000, "\\[.*?\\]", ""),
-
-         Deaths_2017 = str_replace_all(Deaths_2017, "<", ""),
-         Deaths_2010 = str_replace_all(Deaths_2010, "<", ""),
-         Deaths_2005 = str_replace_all(Deaths_2005, "<", ""),
-         Deaths_2000 = str_replace_all(Deaths_2000, "<", ""),
-
-         Deaths_2017 = str_replace_all(Deaths_2017, " ", ""),
-         Deaths_2010 = str_replace_all(Deaths_2010, " ", ""),
-         Deaths_2005 = str_replace_all(Deaths_2005, " ", ""),
-         Deaths_2000 = str_replace_all(Deaths_2000, " ", ""),
-  
-         Deaths_2017 = as.double(Deaths_2017),
-         Deaths_2010 = as.double(Deaths_2010),
-         Deaths_2005 = as.double(Deaths_2005),
-         Deaths_2000 = as.double(Deaths_2000))
-
-# select only the countries we need
-HIV_mort <- HIV_mort[HIV_mort$Country %in% ssa.list, ]
+  mutate_at(vars(starts_with("Deaths")), clean_deaths) %>% 
+  filter(Country %in% ssa.list)
 
 head(HIV_mort)
 
@@ -188,9 +159,11 @@ From the table above we can see that the 2017 mean for the dataset as a whole is
 ```{r}
 
 HIV_mort <- HIV_mort %>% 
-  mutate(min = apply(HIV_mort[, 2:4], 1, FUN = min)) %>% 
-  mutate(max  = apply(HIV_mort[, 2:4], 1, FUN = max)) %>% 
-  mutate(Change = max - min)
+  mutate(
+    min = apply(HIV_mort[, 2:4], 1, FUN = min),
+    max  = apply(HIV_mort[, 2:4], 1, FUN = max),
+    Change = max - min
+  )
 
 ```
 
@@ -199,19 +172,20 @@ Next we can create a plot of the data and look at the top 10 countries with the 
 
 
 
-```{r}
 
-HIV_mort %>% 
-  top_n(10, wt = Change) %>% 
+```{r}
+HIV_mort %>%
+  top_n(10, wt = Change) %>%
   gather(Year, Deaths, Deaths_2017:Deaths_2000) %>% 
-  na.omit() %>% 
-  separate(Year, c("D", "Year"), sep = "_", convert = TRUE) %>% # I should be able to use NA rather than D, but get an error
-  ggplot(aes(x = Year, y = Deaths, color = Country))+
-  geom_line()+
-  geom_vline(xintercept = 2004, color = "black", linetype  = "dotted")+
-  theme_bw()+
-  theme(legend.position = "bottom")
-  
+  na.omit() %>%
+  mutate(
+    Year = str_replace(Year, "Deaths_", "") %>% as.numeric()
+  ) %>% 
+  ggplot(aes(x = Year, y = Deaths, color = Country)) +
+  geom_line() +
+  geom_vline(xintercept = 2004, color = "black", linetype = "dotted") +
+  theme_bw() +
+  theme(legend.position = "bottom")  
 ```
 
 
@@ -234,56 +208,44 @@ The world fact book  by the CIA has some HIV infection rate data.
 ```{r}
 # load the HIV data
 HIV_rate_2016 <- read_csv("HIV rates.csv", col_names = TRUE)
-#read in the shape file 
-africa <- readShapeSpatial("Africa_SHP/Africa.shp") %>% 
-  fortify(africa.shp, region = "COUNTRY") %>% 
-  merge(HIV_rate_2016, by.x = "id", by.y = "Country", all.x=TRUE) %>% 
+# read in the shape file
+africa <- readShapeSpatial("Africa_SHP/Africa.shp") %>%
+  fortify(africa.shp, region = "COUNTRY") %>%
+  merge(HIV_rate_2016, by.x = "id", by.y = "Country", all.x = TRUE) %>%
   arrange(order)
 
-africa %>%   
-  ggplot()+
-    geom_polygon(aes(x = long, y = lat, group = group, fill = Rate),
-                 color = "black", size = 0.2)+
-    coord_map()+
-    scale_fill_distiller(palette = "Greens", direction = 1, name = "% HIV infection rate") +
-    theme(panel.background = element_blank(), axis.text = element_blank(),
-          axis.title = element_blank(), axis.ticks = element_blank())
+africa %>%
+  ggplot() +
+  geom_polygon(aes(x = long, y = lat, group = group, fill = Rate),
+    color = "black", size = 0.2
+  ) +
+  coord_map() +
+  scale_fill_distiller(palette = "Greens", direction = 1, name = "% HIV infection rate") +
+  theme(
+    panel.background = element_blank(), axis.text = element_blank(),
+    axis.title = element_blank(), axis.ticks = element_blank()
+  )
+```
 
+```{r}
+# load the HIV data
+HIV_rate_2016 <- read_csv("HIV rates.csv", col_names = TRUE)
 
+# read in the shape file
 
+africa <- 
+  sf::st_read("Africa_SHP/Africa.shp") %>%
+  left_join(HIV_rate_2016, by = c(COUNTRY = "Country"))
+
+africa %>%
+  ggplot() +
+  geom_sf(aes(fill = Rate)) +
+  scale_fill_distiller(palette = "Reds", direction = 1, name = "% HIV infection rate") +
+  coord_sf() +
+  theme_minimal()
 ```
 
 As we can see from the map above, for some countries we have no data.  We have used R to sketch some ideas regarding this pandemic.  From our ARV coverage data and the plot showing the effect of ARV on HIV related deaths we can see that change is happening.  However, the choropleth above shows that we still have a long way to go to control this outbreak.
 
-
-
-
-
 In the next section we will talk more about drug resistance and how sequencing viral genes reveal which drugs a patient will still respond to.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
