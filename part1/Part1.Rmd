@@ -22,33 +22,6 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # Part 1, HIV in In Sub-Saharan Africa
 
-This 4 part series covers topics of HIV AIDS.  In this first part, we discuss the HIV pandemic in Sub-Saharan Africa.  In the coming sections, we will discuss a recent publication in [`PLoS ONE`](https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0213241).  The authors described how they used affordable hardware to create a [`phylogenetic`](https://en.wikipedia.org/wiki/Phylogenetics) pipeline, tailored for the HIV drug resistance testing facility.  The third section will cover analysing inter- and intrapatient genetic distances of HIV genes using R.  In the final section, we will show how to use R to create distance matrix heat maps to visualize genetic distances.  But first, we need to understand the burden and challenges of HIV.
-
-### Transmission
-
-Worldwide, approximately 36.9 million (UNAIDS) people are living with HIV. 
-
-HIV is transmitted mainly by 
-
-- Having unprotected sex.
-- Non-sterile needles in drug use or sharing needles.
-- Mother to child transmission during birth or breastfeeding.
-- Infected blood transfusions, transplants or other medical procedures. However, this is very unlikely.
-
-
-### Treatment
-
-
-HIV is treatable but not (yet) curable. The good news however, is that if a person receives Antiretroviral (ARV) treatment, their viral load suppresses and the chance of transmitting HIV, drastically decreases. So 30 years into this pandemic, the big question is, why is HIV still a problem?
-
-
-Politics, stigma and stupidity aside.  Not all countries adopted the use of ARVs in an equal manner.  Although AZT (Zidovudine) was the first drug to be approved by the [`FDA`](https://www.fda.gov/forpatients/illness/hivaids/history/ucm151074.htm) in March 1987, it was soon discovered that monotherapy with only AZT was not effective for very long as the virus developed resistance to the medicine quickly.  Since then ARVs have come a long way and patients are placed on HAART (Highly Active Antiretroviral Treatment) or cART (combination Antiretroviral Treatment) which typically consists of 3 drugs of different classes.  
-
-In South Africa, the first AIDS-related death occurred in 1985. Not all patients were eligible to receive ARVs and it was only in 2004 that ARVs became publicly available in South Africa. Eligibility restriction still applied so not all HIV infected patients received treatment. Ideally, a country would have all it’s HIV infected people on treatment, but due to financial constraints, this is not always possible. In South Africa patients where only initialized on ARVs when their CD4 counts dropped below a certain level. This threshold was initially 200 cells/mL in 2004 which was then changed to 350 cells/mL and 500 cell/mL at later intervals. These recommendations were a compromise between the availability of funds and getting ARVs to the people needing it the most. CD4 cells are a major component of the immune system; the lower the CD4 cell count the higher the chance for opportunistic infections. Thus, the idea is to support the patients who are most likely to contract an opportunistic infection. The problem with this was that about only a third of the HIV infected people in South Africa were receiving HAART treatment. In 2017 the guidelines changed to test and treat, i.e. any newly diagnosed patient will receive HAART treatment. This is a big improvement for many reasons, but notably a lower infection rate. If a patient is taking HAART treatment and it is effective in suppressing the viral replication, the chances of the patient transmitting the virus are very close to zero. However, these treatments are not without side effects which in some cases causes very poor adherence to the treatment. There are numerous factors to blame here, but socio-economic factors and depression are worth mentioning. There is also ignorance and the ‘fear of knowing’ which causes people not to know their status. Finally, the x-factor or human nature brings with it various other complexities such as conspiracy theories, religious and personal beliefs. This will be a very long post if we delve into all the issues, the take home: the situation is complicated.
-
-This being a blog about R, let's look at some ARV statistics and see if we can make any conclusions.
-
-
 ```{r load}
 suppressPackageStartupMessages({
   library(dplyr)
@@ -62,10 +35,71 @@ suppressPackageStartupMessages({
   library(viridis)
   library(RColorBrewer)
   library(mapproj)
+  library(broom)
+  library(ggrepel)
   library(sf)
 })
 ```
 
+
+
+### Stages of HIV infection
+
+HIV infection can be divided into the three consecutive stages, Acute primary infection, asymptomatic stage and the Symptomatic stage.
+
+The first stage, Acute primary infection, has symptoms very much like flu and may last for a week or two.  The body reacts with an immune response which results in the production of antibodies to fight the HIV infection.  This process is called seroconversion and can last a couple of months.  During this stage, although the patient is infected and the virus is spreading through the body, the patient might not test positive.  This initial period of seroconversion is called 'the window period' and depends on the type of test used.  Rapid tests are done at the point of care.  This means that the test can be done at the clinic with a finger prick and the result is ready in 20 minutes.  The drawback of this test is a window period of three months and a small false positive rate.  All positive rapid tests are laboratory confirmed.  The rapid test detects HIV antibodies and because the immune system needs some time to produce sufficient antibodies to be detected there is this window period.  Most laboratories these days use fourth generation [`ELISA`](https://www.immunology.org/public-information/bitesized-immunology/experimental-techniques/enzyme-linked-immunosorbent-assay) (Enzyme-Linked Immunosorbent Assay) for HIV diagnosis and confirmation.  This technique detects both HIV antibodies and antigens.  Antigens are the foreign objects which the immune system recognizes as 'non-self' and in this case, it is the viral protein p24.  The advantage of this technique is a window period of only one month. 
+
+
+This first stage which contains the window period is then followed by the asymptomatic stage and this may last for as long as ten years.  During this stage, the infected person does not experience symptoms and feels healthy.  However, the virus is still replicating and destroying immune cells, especially CD4 cells.  This damages the immune system and ultimately leads to stage 3 if not treated.  This does not mean that people at stage 3 are doomed, but the earlier treatment starts the better the outcome.
+
+Stage 3 is revered to as symptomatic HIV infection or AIDS (Acquired Immune Deficiency Syndrome).  At this stage, the immune system is so weak that it is not able to fight off bacterial or fungal infections which typically does not cause infections in immune competent people.  These serious infections and called opportunistic infections and has a high morbidity and mortality rate.
+
+
+### Transmission and epidemiology
+
+Worldwide, approximately 36.9 million (UNAIDS) people are living with HIV. 
+
+HIV is transmitted mainly by 
+
+- Having unprotected sex.
+- Non-sterile needles in drug use or sharing needles.
+- Mother to child transmission during birth or breastfeeding.
+- Infected blood transfusions, transplants or other medical procedures. However, this is very unlikely.
+
+
+We mentioned the window period of the HIV infection as well as the asymptomatic stage.  During any of the stages, it is possible to transmit the infection.  The problem with the window period is an unknown HIV status or falsely assumed negative status and during the asymptomatic stage, there is no reason for the infected person to seek medical attention.  There are obviously behavioural issues in HIV transmission and due to the long asymptomatic phase HIV positive status can be unknown for a long period.  For these reasons, it is important that high-risk individuals do frequent HIV tests to determine their status.
+
+
+Let's look at the rates of HIV infection in different African countries. The world factbook by the CIA has some HIV infection rate data.
+
+
+[`Data`](https://www.cia.gov/LIBRARY/publications/the-world-factbook/rankorder/rawdata_2155.txt)
+
+```{r plot_map}
+# load the HIV data
+HIV_rate_2016 <- read_csv("HIV rates.csv", col_names = TRUE, col_types = "cd")
+
+# read in the shape file
+
+africa <-
+  sf::st_read("Africa_SHP/Africa.shp", stringsAsFactors = FALSE, quiet = TRUE) %>%
+  as_tibble() %>%
+  rename(Country = "COUNTRY") %>%
+  left_join(HIV_rate_2016, by = "Country")
+
+africa %>%
+ ggplot() +
+ geom_sf(aes(fill = Rate)) +
+ scale_fill_distiller(palette = "Reds", direction = 1, name = "% HIV infection rate") +
+ coord_sf() +
+ theme_minimal()
+```
+
+In the choropleth above we see that South Africa, Botswana, Lesotho and Swaziland seems to have the highest rates of infection. This is presented as the percentage infected which takes into account population sizes. It is important to understand that the level of denial is indirectly proportional to the reported rate of infection. Even in this day and age denial of stigmatized diseases is an issue.
+
+We can also look at the burden of HIV as the number of people infected and we might get a different picture from what we saw from the choropleth.
+
+[`Data`](http://apps.who.int/gho/data/node.main.626)
 
 Read in the data.
 
@@ -81,12 +115,10 @@ arv_dat <- read_csv(
 head(arv_dat)
 ```
 
-[`Data`](http://apps.who.int/gho/data/node.main.626)
-
 There is a couple of issues with this data.
 
- - Very long variable names, descriptive, but difficult to work with
- - The values contain confidance intervals in brackets, this will be difficult to work with as is
+ - Very long variable names, descriptive, but difficult to work with, this was changed during import
+ - The values contain confidence intervals in brackets, this will be difficult to work with as is
  - We might want to transform no data to NA
  - We are interested in Sub-Saharan Africa, but the data is for the whole world
 
@@ -117,6 +149,30 @@ head(arv_dat)
 
 In the code above we renamed the column headers to Country, PersCov (percentage ARV coverage), NumberOnARv (Number of patients on ARVs) and NumberInfected (Number of patients infected).  We used a regular expression to get rid of all the ranges.  We removed the "<" sign and spaces within numbers.  Changed "No data" to NA and converted the characters to numbers. We filtered out the countries we don't want.  Note some countries are not available in the ARV data, like Swaziland and Reunion.
 
+Now let's look at the countries with the highest number of infected people of all ages.
+
+```{r highest}
+arv_dat %>% 
+  top_n(4, wt = NumberInfected) %>% 
+  arrange(-NumberInfected) %>% 
+  kable(format = "html", caption = "Countries with the highest number of HIV infection") %>% 
+  kable_styling(bootstrap_options = c("striped", "hover"))
+```
+
+From the table above, we can see that South Africa has the highest number of HIV infected people in Sub-Saharan Africa.
+
+
+### Treatment
+
+
+HIV is treatable but not (yet) curable. The good news, however, is that if a person receives Antiretroviral (ARV) treatment, their viral load suppresses and the chance of transmitting HIV, drastically decreases. So 30 years into this pandemic, the big question is, why is HIV still a problem?
+
+
+Politics, stigma and stupidity aside.  Not all countries adopted the use of ARVs in an equal manner.  Although AZT (Zidovudine) was the first drug to be approved by the [`FDA`](https://www.fda.gov/forpatients/illness/hivaids/history/ucm151074.htm) in March 1987, it was soon discovered that monotherapy with only AZT was not effective for very long as the virus developed resistance to the medicine quickly.  Since then ARVs have come a long way and patients are placed on HAART (Highly Active Antiretroviral Treatment) or cART (combination Antiretroviral Treatment) which typically consists of 3 drugs of different classes.  
+
+In South Africa, the first AIDS-related death occurred in 1985. Not all patients were eligible to receive ARVs and it was only in 2004 that ARVs became publicly available in South Africa. Eligibility restriction still applied so not all HIV infected patients received treatment. Ideally, a country would have all it’s HIV infected people on treatment, but due to financial constraints, this is not always possible. In South Africa patients where only initialized on ARVs when their CD4 counts dropped below a certain level. This threshold was initially 200 cells/mL in 2004 which was then changed to 350 cells/mL and 500 cell/mL at later intervals. These recommendations were a compromise between the availability of funds and getting ARVs to the people needing it the most. CD4 cells are a major component of the immune system; the lower the CD4 cell count the higher the chance for opportunistic infections. Thus, the idea is to support the patients who are most likely to contract an opportunistic infection. The problem with this was that about only a third of the HIV infected people in South Africa were receiving HAART treatment. In 2017 the guidelines changed to test and treat, i.e. any newly diagnosed patient will receive HAART treatment. This is a big improvement for many reasons, but notably a lower infection rate. If a patient is taking HAART treatment and it is effective in suppressing the viral replication, the chances of the patient transmitting the virus are very close to zero. However, these treatments are not without side effects which in some cases causes very poor adherence to the treatment. There are numerous factors to blame here, but socio-economic factors and depression are worth mentioning. There is also ignorance and the ‘fear of knowing’ which causes people not to know their status. Finally, the x-factor or human nature brings with it various other complexities such as conspiracy theories, religious and personal beliefs. This will be a very long post if we delve into all the issues, the take home: the situation is complicated.
+
+We looked at the rate of HIV infections and also the number of people infected in the most endemic countries. We have talked about treatment.  It would be interesting to look at ARV coverage by country.
 
 Let's see how these countries rank by ARV coverage
 
@@ -132,19 +188,15 @@ arv_dat %>%
 ```
 
 
-From the graph above we can see that South Africa has the highest infection rate and plenty of catchup to do.  It is great to see that Zimbabwe, a country in the limelight for various problems, has such a good ARV program.
+The graph above shows that Zimbabwe, Namibia, Botswana and Rwanda has the highest ARV coverage of above 80%.  We can see that South Africa has the highest number of infections as indicated by the legend (we saw this before) and coverage of just above 60%.
 
-```{r highest}
-arv_dat %>% 
-  top_n(1, wt = NumberInfected) %>% 
-  kable(format = "html", caption = "Country with the highest HIV infection") %>% 
-  kable_styling(bootstrap_options = c("striped", "hover"))
-```
+Botswana rolled out their treatment program in 2002 and by mid-2005 about half of the eligible population received ARV treatment.  South Africa on the other hand only started treatment in 2004, which we will talk about later.
 
+When talking about treatment, we should also look at the changes in mortality.
 
-### HIV related deaths
+#### HIV related deaths
 
-We can also look at HIV related deaths. [`Data`](http://apps.who.int/gho/data/node.main.623?lang=en)
+[`Data`](http://apps.who.int/gho/data/node.main.623?lang=en)
 
 ```{r hiv_mort}
 
@@ -176,9 +228,7 @@ hiv_mort <- hiv_mort %>%
 ```
 
 
-Next we can create a plot of the data and look at the top 10 countries with the biggest change in HIV related mortality.
-
-
+Next, we can create a plot of the data and look at the top 10 countries with the biggest change in HIV related mortality.
 
 
 ```{r plot_hiv_mort}
@@ -198,43 +248,128 @@ hiv_mort %>%
 
 
 
-Remember we mentioned that HAART was introduced in 2004 in South Africa, depicted here by the black dotted line.  It is easy to appreciate the dramatic effect the introduction of ARVs had in South Africa.  Although, the picture above is positive, the fight is not over.  The target is to get at least 90% of HIV infected patients on treatment.  Adherence to ARV regimens stays crucial not only to suppress viral replication, but also to minimize development of drug resistance. 
+Remember we mentioned that HAART was introduced in 2004 in South Africa, depicted here by the black dotted line.  It is easy to appreciate the dramatic effect the introduction of ARVs had in South Africa.  Although the picture above is positive, the fight is not over.  The target is to get at least 90% of HIV infected patients on treatment.  Adherence to ARV regimens stays crucial not only to suppress viral replication but also to minimize the development of drug resistance. 
 
 
-We have now looked at countries ranked by ARV coverage and we have seen the impact of the introduction of ARVs.  
+#### Infection rates
 
+[`DATA`](http://aidsinfo.unaids.org/?did=5b4eaa7cdddb54192bb39714&r=world&t=null&tb=d&bt=dnli&ts=null&tr=world&tl=2)
 
-We can also look at the rates of HIV infection in different African countries.  
+As mentioned earlier, if a patient is taking and responding to treatment the viral load gets suppressed and the chances of transmitting the infection become very close to null.  Thus the more patients with an undetectable viral load the lower the transmission rate.
 
+```{r}
 
-The world fact book  by the CIA has some HIV infection rate data.
+new_infections <- read_csv("Epidemic transition metrics_Trend of new HIV infections.csv", col_names = TRUE)
 
-[`Data`](https://www.cia.gov/LIBRARY/publications/the-world-factbook/rankorder/rawdata_2155.txt)
+new_infections <- new_infections %>% 
+  filter(Country %in% sub_sahara) %>% 
+  na_if("...") %>% 
+  select(c(1,2,5,8,11,14,17,20,23)) %>% 
+  mutate_at(-1, clean_deaths)
 
+new_infections %>% 
+  na.omit() %>% 
+  gather(Year, NewInfections, 2:9) %>% 
+  ggplot(aes(x = Year, y = NewInfections, color = Country))+
+  geom_point()+
+  theme_classic()+
+  theme(legend.position = "none")+
+  xlab("Year") + ylab("Number of new infections")
 
-
-
-```{r plot_map}
-# load the HIV data
-HIV_rate_2016 <- read_csv("HIV rates.csv", col_names = TRUE, col_types = "cd")
-
-# read in the shape file
-
-africa <-
-  sf::st_read("Africa_SHP/Africa.shp", stringsAsFactors = FALSE, quiet = TRUE) %>%
-  as_tibble() %>% 
-  rename(Country = "COUNTRY") %>% 
-  left_join(HIV_rate_2016, by = "Country")
-
-africa %>%
- ggplot() +
- geom_sf(aes(fill = Rate)) +
- scale_fill_distiller(palette = "Reds", direction = 1, name = "% HIV infection rate") +
- coord_sf() +
- theme_minimal()
 ```
 
-As we can see from the map above, for some countries we have no data.  We have used R to sketch some ideas regarding this pandemic.  From our ARV coverage data and the plot showing the effect of ARV on HIV related deaths we can see that change is happening.  However, the choropleth above shows that we still have a long way to go to control this outbreak.
+The plot above is a bit busy.  Countries which are highly endemic with good ARV coverage and prevention of infection programs should have a steeper decline in the newly infected people.  On first glance, it looks like some of the data points are fairly linear.  Let's go with that assumption and apply linear regression to each country.
 
-In the next section we will talk more about drug resistance and how sequencing viral genes reveal which drugs a patient will still respond to.
+
+```{r}
+
+
+rates_modeled <- new_infections %>% 
+  na.omit() %>% 
+  gather(Year, NewInfections, 2:9) %>% 
+  mutate(Year = as.numeric(Year)) %>% 
+  group_by(Country) %>% 
+  do(tidy(lm(NewInfections ~ Year, data = .))) %>% 
+  filter(term == "Year") %>% 
+  mutate("p.Interpreted" = ifelse(p.value <= 0.05, "significant", "insignificant"))
+
+head(rates_modeled) %>% 
+  kable(format = "html", caption = "Results of linear regression: Rate of new infections per year") %>% 
+  kable_styling(bootstrap_options = c("striped", "hover"))
+
+```
+
+```{r}
+rates_modeled %>%
+  na.omit() %>% 
+  ggplot(aes(x = Country, y = estimate, fill = p.Interpreted)) +
+  geom_col()+
+  coord_flip()+
+  theme_bw()+
+  ylab("Extimated change in HIV infection (people/year)")
+
+```
+
+A quick look at the plot shown above we can see that for most countries a linear model fits the data with a significant p-value cutoff of 0.05.  It is important to note here that the data we have at hand is from 2010 to 2017.  This shows that some countries notably, South Africa, are on a good trajectory.  Botswana, being the "Poster Child" of a good HIV treatment and prevention program, seems to have stabilized in terms of rate of infection with a positive but insignificant estimate of the rate of infection.  This could be explained by the following reasons
+
+- First African country to introduce HAART, 2002
+- Progressive in terms of prevention programs
+- Only looking from 2010, we are missing the dramatic decline in infection
+- The WHO goal is to get 90% of a country's infected people on HAART, but the last 5-7% might be the hardest to convince
+
+
+
+We can combine the ARV and estimated rates of infection data.
+
+```{r}
+ARVs_on_infection <- left_join(arv_dat, rates_modeled, by = "Country")
+
+ARVs_on_infection %>% 
+  na.omit() %>% 
+  ggplot(aes(x = PersCov, y = estimate, shape = p.Interpreted, color = NumberInfected))+
+  geom_point()+
+  geom_text_repel(aes(label = Country), size = 3)+
+  theme_bw()+
+  xlab("% ARV coverage") + ylab("Extimated change in HIV infection (people/year)")
+
+```
+
+
+South Africa has the highest number of infected people, but on the positive side has a downward trajectory of about 15000 fewer people newly infected each year.  Although ARVs does play a crucial role in controlling this epidemic it is not the only factor involved.  Prevention from mother to child transmission has been very successful in South Africa.  Awareness campaigns and education are playing a big role as well.
+
+
+### The laboratory, HIV diagnosis and monitoring
+
+HIV related laboratory tests are not the only diagnostics done in a Virology department, but in endemic countries, it is probably the most kind of tests which is done.  The first HIV related test done would be a diagnosis.  This is done differently in adults than in infants.  As we discussed earlier, after HIV infection the immune system develops antibodies. We can use a field of study called serology to detect antibodies and antigens and in most cases, an ELISA test is performed to confirm HIV seroconversion or status.  Since the mother's antibodies will be present in the infant an ELISA will tell us the baby is positive even though not infected.  Infants are diagnosed by detecting viral RNA or DNA in their blood.  This is done by PCR (Polymerase Chain Reaction).
+
+Once a patient is diagnosed as HIV positive, the patient will be initiated on HAART and in most cases, the viral load will be suppressed.  After HAART initiation, the patient gets two six-monthly viral load tests to make sure viral replication is suppressed.  To keep an eye out for trouble a yearly viral load is done to confirm adherence and effectiveness of the treatment.
+
+When an unsuppressed viral load is detected action is taken and adherence counselling is performed.  If this does not solve the problem drug resistance testing is performed to assess the resistance profile of the infection in order to adjust the ARV regimen accordingly. This is done by isolating the viral RNA, converting it to DNA, amplify the DNA to sufficient quantities to enable sequencing of the DNA.  In our laboratory, we use [`Sanger sequencing`](https://en.wikipedia.org/wiki/Sanger_sequencing), but other sequencing technologies also exist.
+
+<br>
+
+
+![HIV Genome as depicted by the Los Alamos HIV sequence database. Available at https://www.hiv.lanl.gov/content/sequence/HIV/MAP/landmark.html](hxb2genome.gif)
+
+
+<br>
+
+
+The diagram above depicts the genome of HIV.  The most common targets for interfering with viral replication is located in the *pol* gene. Specifically:
+
+- prot:  The viral protease.  Many of the viral proteins are translated as longer polypeptides which are then cleaved into mature proteins by the protease.
+- p51 RT: The viral reverse transcriptase:  Each virion contains two copies of viral RNA.  The reverse transcriptase converts the RNA to DNA.
+- p31 int: The viral integrase:  This enzyme integrates the reverse transcribed viral DNA into host genomes of the infected cells and establishes chronic infection.
+
+Essentially, ARVs interfere with these viral enzymes by inhibiting their action.  Protease inhibitors prevent the maturation of viral proteins.  Reverse transcriptase inhibitors prevent the formation of a DNA copy of the viral genome which then gives the integrase nothing to work with.  Integrase inhibitors prevent the integration of viral DNA into the host genome, which is a crucial part of replication and infection.  Combining these ARVs in clever ways results in HAART or cART.  By sequencing the viral RNA we can detect mutations which cause resistance to specific ARVs.  This information is then used to adjust the ARV regimen to once again effectively suppress viral replication.
+
+
+
+The viral reverse transcriptase has a high error rate when doing the conversion of RNA to DNA and introduces random mutations in the viral genome.  In the presence of selective pressure, like ARVs, these random mutations might give advantageous phenotypic traits to the replicating virus, like drug resistance.  On the other hand, if the patient is properly adhering to the treatment, the viral replication is suppressed, replication does not occur, thus mutations can't be made.
+
+
+This high rate of mutation can be used in the laboratory as one of the quality control tools.  The polymerase chain reaction is prone to contamination, so it is possible when doing these reactions that one sample might contaminate another.  This will give rise to false mutations in the contaminated sample and an erroneous result to the treating clinician, thus direct negative impact on the patient.  In a recent publication in [`PLoS ONE`](https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0213241) the authors described how they used affordable hardware to create a [`phylogenetic`](https://en.wikipedia.org/wiki/Phylogenetics) pipeline, tailored for the HIV drug resistance testing facility. We will discuss this in the coming section of this 4 part blog post.  In the 3rd part, we will discuss genetic distances and phylogenetics, followed by the 4th part which will look at the application of logistic regression in analyzing inter- and intra-patient genetic distance of viral sequences.
+
+See you in the next section!
+
 
