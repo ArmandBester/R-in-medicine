@@ -1,5 +1,5 @@
 ---
-title: 'R in medicine, part 1: HIV in Africa'
+title: 'HIV in Africa, part 1, an overview'
 author: Armand Bester, Sabeehah Vawda and Andrie de Vries
 date: '2019-05-01'
 slug: aids-hiv-detection
@@ -65,7 +65,7 @@ suppressPackageStartupMessages({
   library(mapproj)
   library(broom)
   library(ggrepel)
-  library(sf)
+  #library(sf)
 })
 ```
 
@@ -145,7 +145,7 @@ head(arv_dat)
 
 This code renames the column headers to `Country`, `PersCov` (percentage ARV coverage), `NumberOnARV` (Number of patients on ARVs) and `NumberInfected` (Number of patients infected).
 
-We use a regular expression to get rid of all the square bracket branges.  We also remove the "<" sign and spaces within numbers, change "No data" to NA and convert the characters to numbers. We filter out the countries we don't want.  Note some countries are not available in the ARV data, like Swaziland and Reunion.
+We use a regular expression to get rid of all the square bracket ranges.  We also remove the "<" sign and spaces within numbers, change "No data" to NA and convert the characters to numbers. We filter out the countries we don't want.  Note some countries are not available in the ARV data, like Swaziland and Reunion.
 
 
 ## Highest infected countries
@@ -347,9 +347,7 @@ arv_on_infection %>%
 ```
 
 
-South Africa has the highest number of infected people, but on the positive side has a downward trajectory of about 15000 fewer people newly infected each year.  Although ARVs do play a crucial role in controlling this epidemic it is not the only factor involved.  Prevention from mother to child transmission has been very successful in South Africa.  Awareness campaigns and education are playing a big role as well.  The plot above shows our linearly modeled rates.  
-
-
+South Africa has the highest number of infected people, but on the positive side has a downward trajectory of about 15000 fewer people newly infected each year.  Although ARVs do play a crucial role in controlling this epidemic it is not the only factor involved.  Prevention from mother to child transmission has been very successful in South Africa.  Awareness campaigns and education are playing a big role as well.  The plot above shows our linearly modelled rates.  
 
 
 ## The laboratory, HIV diagnosis and monitoring
@@ -401,7 +399,7 @@ In a recent publication in [`PLoS ONE`](https://journals.plos.org/plosone/articl
 * In *Part 3* we will discuss genetic distances and phylogenetics
 
 * Finally, in *Part 4* we will look at the application of logistic regression in analyzing inter- and intra-patient genetic distance of viral sequences.
->>>>>>> 5632d9c5f4edd18a58516d8417c357935f604fc6
+
 
 See you in the next section!
 
