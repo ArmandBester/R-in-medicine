@@ -1,5 +1,5 @@
 ---
-title: 'An R pipeline for detecting HIV: Part 1, HIV in sub-Sahara Africa'
+title: 'An analysis of the HIV pandemic using R: Part 1, HIV in sub-Sahara Africa'
 author: Armand Bester, Sabeehah Vawda and Andrie de Vries
 date: '2019-05-01'
 slug: pipeline-for-detecting-hiv-part-1
@@ -19,9 +19,9 @@ summary: 'Incidence of HIV infection in sub-sahara Africa'
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-*Philip (Armand) Bester is a lecturer at the Department of Medical Microbiology and Virology, at the [University of the Free State](https://www.ufs.ac.za/) in South Africa*
+*Phillip (Armand) Bester is a medical scientist, researcher and lecturer at the Division of Virology, University of the Free State and National Health Laboratory Service (NHLS), Bloemfontein, South Africa (www.ufs.ac.za)*
 
-*Sabeehah Vawda is a researcher at the Department of Medical Microbiology and Virology, at the University of the Free State*
+*Sabeehah Vawda is a pathologist, researcher and lecturer at the Division of Virology, University of the Free State and National Health Laboratory Service (NHLS), Bloemfontein, South Africa (www.ufs.ac.za)*
 
 *Andrie de Vries is author of "R for Dummies" and a Solutions Engineer at RStudio*
 
