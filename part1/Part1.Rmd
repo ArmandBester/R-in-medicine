@@ -11,22 +11,56 @@ tags:
   - Medicine
   - R/Medicine
   - HIV/AIDS
-summary: 'Incidence of HIV infection in sub-sahara Africa'
+summary: "The Human Immunodifciency Virus (HIV) is the virus that causes acquired immunodeficiency syndrome (AIDS).  The virus invades various immune cells, causing loss of immunity, and thus increased susceptibility to infections, including Tuberculosis and cancer.  In a recent publication in PLoS ONE the authors described how they used affordable hardware to create a phylogenetic pipeline, tailored for the HIV drug resistance testing facility.  In this first of a series of four posts we highlight the serious problem of HIV infection in sub-Saharan Africa, with special analysis of the situation in South Africa. The subsequent posts will describe the phylogenetics pipeline (running on a Raspberry Pi), and the analysis of viral sequences using R."
 
 ---
 
 ```{r setup, include=FALSE}
+# packages required for this post
+local({
+  pkgs <- c(
+    "dplyr",
+    "readr",
+    "stringr",
+    "tidyr",
+    "ggplot2",
+    "forcats",
+    "knitr",
+    "kableExtra",
+    "maptools",
+    "viridis",
+    "RColorBrewer",
+    "mapproj",
+    "broom",
+    "ggrepel",
+    "sf"
+  )
+  
+  not_installed <- setdiff(pkgs, as.data.frame(installed.packages())$Package)
+  if (length(not_installed)) {
+    install.packages(not_installed)
+  }
+})
+
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-*Phillip (Armand) Bester is a medical scientist, researcher and lecturer at the Division of Virology, University of the Free State and National Health Laboratory Service (NHLS), Bloemfontein, South Africa (www.ufs.ac.za)*
+*Phillip (Armand) Bester is a medical scientist, researcher and lecturer at the [Division of Virology](https://www.ufs.ac.za/health/departments-and-divisions/virology-home), [University of the Free State](https://www.ufs.ac.za) and [National Health Laboratory Service (NHLS)](http://www.nhls.ac.za/), Bloemfontein, South Africa*
 
-*Sabeehah Vawda is a pathologist, researcher and lecturer at the Division of Virology, University of the Free State and National Health Laboratory Service (NHLS), Bloemfontein, South Africa (www.ufs.ac.za)*
+*Sabeehah Vawda is a pathologist, researcher and lecturer at the [Division of Virology](https://www.ufs.ac.za/health/departments-and-divisions/virology-home), [University of the Free State](https://www.ufs.ac.za) and [National Health Laboratory Service (NHLS)](http://www.nhls.ac.za/), Bloemfontein, South Africa*
 
-*Andrie de Vries is author of "R for Dummies" and a Solutions Engineer at RStudio*
+*Andrie de Vries is author of "R for Dummies" and Solutions Engineer at RStudio*
 
 
 ## Introduction
+
+The [Human Immunodifciency Virus](https://www.immunology.org/public-information/bitesized-immunology/pathogens-and-disease/human-immunodeficiency-virus-hiv) (**HIV**) is the virus that causes acquired immunodeficiency syndrome (**AIDS**).  The virus invades various immune cells, causing loss of immunity, and thus increased susceptibility to infections, including Tuberculosis and cancer.
+
+In a recent publication in [PLoS ONE](https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0213241) the authors described how they used affordable hardware to create a [phylogenetic](https://en.wikipedia.org/wiki/Phylogenetics) pipeline, tailored for the HIV drug resistance testing facility.
+
+In this series of blog posts we highlight the serious problem of HIV infection in sub-Saharan Africa, with special analysis of the situation in South Africa.
+
+
 
 ### Stages of HIV infection
 
@@ -43,7 +77,7 @@ Stage 3 is referred to as **symptomatic HIV infection or AIDS** (Acquired Immune
 
 Worldwide, approximately 36.9 million (UNAIDS) people are living with HIV. 
 
-HIV is transmitted mainly by 
+HIV is transmitted mainly by:
 
 - Having unprotected sex.
 - Non-sterile needles in drug use or sharing needles.
@@ -61,8 +95,8 @@ So 30 years into this pandemic, the big question is, why is HIV still a problem?
 
 Not all countries adopted the use of ARVs in an equal manner.  Although AZT (Zidovudine) was the first drug to be approved by the [FDA](https://www.fda.gov/forpatients/illness/hivaids/history/ucm151074.htm) in March 1987, it was soon discovered that monotherapy with only AZT was not effective for very long as the virus developed resistance to the medicine quickly.  Since then ARVs have come a long way and patients are placed on:
 
-- *HAART* (Highly Active Antiretroviral Treatment), or 
-- *cART* (combination Antiretroviral Treatment) which typically consists of 3 drugs of different classes.  
+- **HAART** (Highly Active Antiretroviral Treatment), or 
+- **cART** (combination Antiretroviral Treatment) which typically consists of 3 drugs of different classes.  
 
 ## HIV in Africa
 
@@ -389,7 +423,6 @@ Once a patient is diagnosed as HIV positive, the patient will be initiated on HA
 
 When an unsuppressed viral load is detected action is taken and adherence counselling is performed.  If this does not solve the problem drug resistance testing is performed to assess the resistance profile of the infection in order to adjust the ARV regimen accordingly. This is done by isolating the viral RNA, converting it to DNA, amplifying the DNA to sufficient quantities to enable sequencing of the DNA.  In our laboratory, we use [Sanger sequencing](https://en.wikipedia.org/wiki/Sanger_sequencing), but other sequencing technologies also exist.
 
-
 ---
 
 ```{r sanger_diagram, echo=FALSE, fig.cap="HIV Genome as depicted by the Los Alamos HIV sequence database. Available at https://www.hiv.lanl.gov/content/sequence/HIV/MAP/landmark.html", out.extra='style="margin:50px 10px"', fig.align="center"}
@@ -426,7 +459,7 @@ This high rate of mutation can be used in the laboratory as one of the quality c
 
 ## What next?
 
-In a recent publication in [`PLoS ONE`](https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0213241) the authors described how they used affordable hardware to create a [phylogenetic](https://en.wikipedia.org/wiki/Phylogenetics) pipeline, tailored for the HIV drug resistance testing facility.
+In a recent publication in [PLoS ONE](https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0213241) the authors described how they used affordable hardware to create a [phylogenetic](https://en.wikipedia.org/wiki/Phylogenetics) pipeline, tailored for the HIV drug resistance testing facility.
 
 * In **Part 2** of this four part series we discuss this pipeline.
 
