@@ -1,5 +1,5 @@
 ---
-title: 'R in medicine, part 2: HIV in Africa'
+title: 'HIV in Africa, part 2: Drug resistance testing'
 author: Armand Bester, Dominique Goedhals and Andrie de Vries
 date: '2019-05-08'
 slug: aids-hiv-detection
@@ -36,13 +36,22 @@ suppressPackageStartupMessages({
 
 
 
-# Part 2, HIV drug resistance testing in Sub-Saharan Africa
+## Part 2, HIV drug resistance testing in Sub-Saharan Africa
 
-This 4 part series covers topics of HIV AIDS.  In this first part, we discussed the HIV pandemic in Sub-Saharan Africa.  In the this second installment, we discuss a recent publication in [`PLoS ONE`](https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0213241).  The authors described how they used affordable hardware to create a [`phylogenetic`](https://en.wikipedia.org/wiki/Phylogenetics) pipeline, tailored for the HIV drug resistance testing facility.  The third section will cover analysing inter- and intrapatient genetic distances of HIV genes using R.  In the final section, we will show how to use R to create distance matrix heat maps to visualize genetic distances. 
+This 4 part series covers topics of HIV AIDS.  In this first part, we discussed the HIV pandemic in Sub-Saharan Africa.  In the this second installment, we discuss a recent publication in [`PLoS ONE`](https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0213241).  The authors described how they used affordable hardware to create a [`phylogenetic`](https://en.wikipedia.org/wiki/Phylogenetics) pipeline, tailored for the HIV drug resistance testing facility. 
 
 ### HIV drug resistance
 
-Discribe drug resistance
+Natural selection is the process by which some form of selective pressure favours a phenotypic trait or change.  These phenotypic traits can be the blood group of a person, whether a pea is wrinkly or not or whether an infectious organism is susceptible or resistant to a drug.  Many times these phenotypic traits, or physical attributes, are caused by genetics.  Genotyping is the process by which one can infer this phenotypic trait from a genotype and this is used more and more frequently in medicine.  In breast cancer treatment, the BRCA (BReast CAncer) genes are genotyped to determine whether these cancer suppressing genes are intact.  If there is a deleterious or damaging mutation in one of these genes it can increase the risk of developing breast cancer, thus a phenotype of increased risk of breast cancer.  For most organisms copying of genetic material happens by very precise enzymes or pathways, but occasionally mutations do occur.  If a mutation occurs and is sufficiently damaging it gets removed from the gene pool.  However, if the mutation is sufficiently beneficial it increases the survival of this genetic variation and might biasly select for it.
+
+
+In the previous section, we discussed ARVs (antiretrovirals) and how these drugs changed the landscape of HIV infection by preventing the development of AIDS.  We mentioned that ARVs suppress viral replication.  One of the steps in HIV replication is the conversion of it's single-stranded RNA to DNA which can then be incorporated into the DNA of infected cells.  The enzyme responsible for this conversion is reverse transcriptase and it has a high error rate when doing this conversion.  One can thus say that HIV has a high evolutionary rate or mutation rate.  These genes are translated into viral proteins which are required to make more virions (viral particles).  Proteins are strings or polymers of amino acid residues with an alphabet of 20 choices of amino acids or letters.  The sequence of the DNA or RNA influences the sequence of the protein, thus mutations in the DNA or RNA can result in changes in the protein and our targets for stopping HIV replication are proteins/enzymes.
+
+
+There are various classes of ARVs which interfere with viral replication by inhibition of viral enzymes.  If the DNA or RNA sequence encoding this enzyme is changed the result might be an unfit virus not capable of further infection or replication.  On the other hand, if this mutation results in an ARV resistant virus replication and infection can still continue in the presence of the ARV in question, thus rendering the ARV inaffective in stopping replication.
+
+
+The question remains, why do people develop resistance?  The short answer: it's a numbers game.  If the patient received the correct regimen of ARVs (known as HAART or highly active antiretroviral treatment) and is taking the doses correctly the viral load will suppress.  Suppression is caused by stopping viral replication and if the virus is not replicating the error-prone reverse transcriptase can cause mutations which in turn cannot be favoured by selective pressure.  If the patient is not taking any treatment, the virus is replicating and thus inevitably mutating, but there is no selective pressure to select for these variants.  Lastly, if the patient is adhering poorly to the treatment, there are times where the effective levels of the treatment are to low to suppress viral replication completely.  In this scenario mutants with a mutation which makes them less susceptible to the treatment will replicate more than the wild type counterparts - these are called escape mutants.  The reason why this is numbers game is that the virus is mutating randomly and one resulting amino acid residue could be replaced by any of 19 other amino acid residues.  It is only when this change causes an increase in replicative fitness that this mutant can become a dominant quasispecies and the patient develops resistance.
 
 
 
