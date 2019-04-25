@@ -249,7 +249,7 @@ hiv_mort <- hiv_mort %>%
 ```
 
 
-Next, we can create a plot of the data and look at the top 10 countries with the biggest change in HIV related mortality.
+Next, we can create a plot of the data and look at the top 5 countries with the biggest change in HIV related mortality.
 
 
 ```{r plot_hiv_mort}
