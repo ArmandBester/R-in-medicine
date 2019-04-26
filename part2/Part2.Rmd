@@ -1,22 +1,36 @@
 ---
-title: 'HIV in Africa, part 2: Drug resistance testing'
+title: 'Analysing the HIV pandemic, Part 2: Drug resistance testing'
 author: Armand Bester, Dominique Goedhals and Andrie de Vries
 date: '2019-05-08'
-slug: aids-hiv-detection
+slug: pipeline-for-detecting-hiv-part-2
 categories:
   - R Language
-  - Guest Post
   - R in Medicine
-tags: [Medicine, R/Medicine, HIV/AIDS]
-summary: 'Drug resistance testing of HIV isolates in sub-sahara Africa'
-
+tags:
+  - Medicine
+  - R/Medicine
+  - HIV/AIDS
+summary: "This is part 2 of a four-part series about the HIV endemic in Africa.  In a recent publication in PLoS ONE the authors described how they used affordable hardware to create a phylogenetic pipeline, tailored for the HIV drug resistance testing facility.  Part 2 discusses drug resistance testing of HIV isolates in sub-sahara Africa."
 ---
 
-
-
-output: html_document
-
 ```{r setup, include=FALSE}
+# packages required for this post
+local({
+  pkgs <- c(
+    "dplyr",
+    "readr",
+    "stringr",
+    "tidyr",
+    "ggplot2",
+    "knitr",
+    "kableExtra"
+  )
+  
+  not_installed <- setdiff(pkgs, as.data.frame(installed.packages())$Package)
+  if (length(not_installed)) {
+    install.packages(not_installed)
+  }
+})
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
@@ -30,15 +44,14 @@ suppressPackageStartupMessages({
   library(ggplot2)
   library(knitr)
   library(kableExtra)
-  
 })
 ```
 
 
 
-## Part 2, HIV drug resistance testing in Sub-Saharan Africa
+## Introduction
 
-This 4 part series covers topics of HIV AIDS.  In this first part, we discussed the HIV pandemic in Sub-Saharan Africa.  In the this second installment, we discuss a recent publication in [`PLoS ONE`](https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0213241).  The authors described how they used affordable hardware to create a [`phylogenetic`](https://en.wikipedia.org/wiki/Phylogenetics) pipeline, tailored for the HIV drug resistance testing facility. 
+This 4 part series covers topics of HIV AIDS.  In this first part, we discussed the HIV pandemic in Sub-Saharan Africa.  In the this second installment, we discuss a recent publication in [PLoS ONE](https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0213241).  The authors described how they used affordable hardware to create a [phylogenetic](https://en.wikipedia.org/wiki/Phylogenetics) pipeline, tailored for the HIV drug resistance testing facility. 
 
 ### HIV drug resistance
 
@@ -56,19 +69,18 @@ The question remains, why do people develop resistance?  The short answer: it's 
 
 
 ```{r, fig.height=8, fig.width=10}
-nrti_dr_scores <- read_delim("ScoresNRTI_1555579653110.tsv", col_names = TRUE, 
-                             delim = "\t", col_types = "cdcddddddd")
+nrti_dr_scores <- read_tsv("ScoresNRTI_1555579653110.tsv", col_types = "cdcddddddd")
 
 nrti_dr_scores %>% 
-  select(-c(2,3,6,7)) %>% 
+  select(Rule, ABC:AZT, FTC:TDF) %>% 
   gather(arv, score, 2:6) %>% 
   filter(!grepl(" ",Rule)) %>% 
   mutate(effect = ifelse(score > 0, "resistance", "hyperSusept")) %>% 
   
-  ggplot(aes(x = Rule, y = score, fill = effect))+
-  geom_col()+
-  coord_flip()+
-  theme_bw()+
+  ggplot(aes(x = Rule, y = score, fill = effect)) +
+  geom_col() +
+  coord_flip() +
+  theme_bw() +
   facet_grid(. ~ arv)
 
 ```
@@ -84,21 +96,21 @@ Discribe phylopi
 ### It's more than a toy.
 
 
-The [`Raspberry Pi`](https://www.raspberrypi.org/) is a small and cheap single board computer.  It is used amongst many hobbyists for all kinds of projects:
+The [Raspberry Pi](https://www.raspberrypi.org/) is a small and cheap single board computer.  It is used amongst many hobbyists for all kinds of projects:
 
-- [`Militarizing Your Backyard with Python: Computer Vision and the Squirrel Hordes`](https://pyvideo.org/pycon-us-2012/militarizing-your-backyard-with-python-computer.html)
-- [`Brewing beer with the help of R`](https://hackaday.com/2013/01/20/raspberry-pi-and-r/)
-- [`Retro gaming machines`](https://retropie.org.uk/)
+- [Militarizing Your Backyard with Python: Computer Vision and the Squirrel Hordes](https://pyvideo.org/pycon-us-2012/militarizing-your-backyard-with-python-computer.html)
+- [Brewing beer with the help of R](https://hackaday.com/2013/01/20/raspberry-pi-and-r/)
+- [Retro gaming machines](https://retropie.org.uk/)
 
 Just some examples.  
 
-One of the motivations behind developing this computer was to teach kids to [`code or engache in electronics`](http://blog.sparkfuneducation.com/teaching-coding-to-kids-using-raspberry-pi-3-and-scratch)
+One of the motivations behind developing this computer was to teach kids to [code or engache in electronics](http://blog.sparkfuneducation.com/teaching-coding-to-kids-using-raspberry-pi-3-and-scratch)
 
 All the above mentioned are very important, but the Raspberry Pi has made its way into science and medicine as well.
 
-A group developed a cheap [`instrument`](https://pubs.rsc.org/en/content/articlehtml/2017/sc/c7sc03281a) to diagnose Ebola virus infection in the field.  Researchers can attach various sensors to the Raspberry Pi and use it for data collection.
+A group developed a cheap [instrument](https://pubs.rsc.org/en/content/articlehtml/2017/sc/c7sc03281a) to diagnose Ebola virus infection in the field.  Researchers can attach various sensors to the Raspberry Pi and use it for data collection.
 
-For our application, we needed to show that the Pi, can handle the problem we wanted it to solve and thus we did some benchmarking. We used the [`Selenium WebDriver`](https://www.seleniumhq.org/) to operate the pipeline as a human would, by actually browsing for an input file and submitting it through the button.  Time stamps were taken for each step and the amount of blast hist that was included in the phylogenetic inference was also recorded.  For this exercise, we set the amount of the closest sequences to retrieve for each sample to 5, which means the submitted sample and 4 of the genetically closest samples.  However, it is possible that different submitted sequences have a retrieved a sequence in common, these will be included in the analysis only once. When we start analyzing this data we will see this.
+For our application, we needed to show that the Pi, can handle the problem we wanted it to solve and thus we did some benchmarking. We used the [Selenium WebDriver](https://www.seleniumhq.org/) to operate the pipeline as a human would, by actually browsing for an input file and submitting it through the button.  Time stamps were taken for each step and the amount of blast hist that was included in the phylogenetic inference was also recorded.  For this exercise, we set the amount of the closest sequences to retrieve for each sample to 5, which means the submitted sample and 4 of the genetically closest samples.  However, it is possible that different submitted sequences have a retrieved a sequence in common, these will be included in the analysis only once. When we start analyzing this data we will see this.
 
 
 
@@ -123,8 +135,8 @@ The 'Run' column shows some info regarding the benchmarking experiment, we know 
 
 ```{r}
 time_dat <- time_dat %>% 
-  separate(Run, into = c("X1","X2", 'nSubmitted'), convert = TRUE) %>% 
-  select(-c(1,2)) %>% 
+  mutate(nSubmitted = str_extract(Run, "\\d+$") %>% as.numeric) %>% 
+  select(-Run ) %>% 
   spread(Description, Measure)
 
 head(time_dat) %>% 
@@ -137,31 +149,32 @@ We now got rid of the useless data in the Run variable and extracted the useful 
 
 Below the explanations for the variables.
 
-- nSubmitted: Number of sequences submitted or uploaded to the pipeline
-- blast: time in seconds for blast to find most similar previously sequenced samples
-- blastHits: the number of sequences retrieved
-- fasttreeTime: the time it took for phylogenetic inference
-- heatmapTime: the time it took to produce the heatmap
-- mafftTime: the time it took to create a multiple sequence alignment
-- renderTime: the time it took to render the tree
-- trimalTime: the time it took to clean the multiple sequence alignment
+- `nSubmitted`: Number of sequences submitted or uploaded to the pipeline
+- `blast`: time in seconds for blast to find most similar previously sequenced samples
+- `blastHits`: the number of sequences retrieved
+- `fasttreeTime`: the time it took for phylogenetic inference
+- `heatmapTime`: the time it took to produce the heatmap
+- `mafftTime`: the time it took to create a multiple sequence alignment
+- `renderTime`: the time it took to render the tree
+- `trimalTime`: the time it took to clean the multiple sequence alignment
 
 
 
 #### Number of sequences submitted  *vs.* most similar sequences retrieved
 
 ```{r}
-time_dat %>% 
-  ggplot(aes(x = nSubmitted, y = blastHits))+
-  geom_smooth(method=lm, se = FALSE, colour='black',formula=y~x-1, size = 0.25)+
-  geom_point()+
-  theme_bw()+
-  xlab("Number of sequences submitted") + ylab("Number of sequences retrieved using blastn")+
-  annotate("text", x=41, y=72, label = "y == 4.628 * x", parse=T)+
-  annotate("text", x=40, y=60, label = "R^2 == 0.998", parse=T)
+time_dat %>%
+  ggplot(aes(x = nSubmitted, y = blastHits)) +
+  geom_smooth(method = lm, se = FALSE, colour = "black", formula = y ~ x - 1, size = 0.25) +
+  geom_point() +
+  theme_bw() +
+  xlab("Number of sequences submitted") +
+  ylab("Number of sequences retrieved using blastn") +
+  annotate("text", x = 41, y = 72, label = "y == 4.628 * x", parse = TRUE) +
+  annotate("text", x = 40, y = 60, label = "R^2 == 0.998", parse = T)
 
 
-fit <-  lm(time_dat$blastHits ~ time_dat$nSubmitted-1)
+fit <- lm(time_dat$blastHits ~ time_dat$nSubmitted - 1)
 summary(fit)
 ```
 
@@ -171,22 +184,22 @@ A linear line fits the data really well.  I mentioned that if different sequence
 #### BLAST time *vs.* number of sequences submitted
 
 ```{r}
-time_dat %>% 
-  ggplot(aes(x = nSubmitted, y = blast))+
-  geom_smooth(method=lm, se = FALSE, colour='black',formula=y~x, size = 0.25)+
-  geom_point()+
-  theme_bw()+
-  xlab("Number of input sequences") + ylab("Time in seconds (blastn)")+
-  annotate("text", x=41, y=90, label = "y == 11.0453 * x", parse=T)+
-  annotate("text", x=40, y=60, label = "R^2 == 0.9999", parse=T)
+time_dat %>%
+  ggplot(aes(x = nSubmitted, y = blast)) +
+  geom_smooth(method = lm, se = FALSE, colour = "black", formula = y ~ x, size = 0.25) +
+  geom_point() +
+  theme_bw() +
+  xlab("Number of input sequences") + ylab("Time in seconds (blastn)") +
+  annotate("text", x = 41, y = 90, label = "y == 11.0453 * x", parse = T) +
+  annotate("text", x = 40, y = 60, label = "R^2 == 0.9999", parse = T)
 
 
-fit <-  lm(time_dat$blast ~ time_dat$nSubmitted)
+fit <- lm(time_dat$blast ~ time_dat$nSubmitted)
 summary(fit)
 ```
 
 
-Again we see a linear relationship for blastn and the time it takes to complete.  For every sequence submitted it takes about 11 seconds to search a database of about 11 000 sequence entries.  We can say the blastn displays linear time complexity or O(n) time.  We did not discover anything new here. Remember, the purpose of this is to show off the Pi flexing its muscles.  You can read about the BLAST algorithm [`here`](https://www.ncbi.nlm.nih.gov/pubmed/2231712).  
+Again we see a linear relationship for blastn and the time it takes to complete.  For every sequence submitted it takes about 11 seconds to search a database of about 11 000 sequence entries.  We can say the blastn displays linear time complexity or O(n) time.  We did not discover anything new here. Remember, the purpose of this is to show off the Pi flexing its muscles.  You can read about the BLAST algorithm [here](https://www.ncbi.nlm.nih.gov/pubmed/2231712).  
 
 
 #### Multiple sequence alingment time *vs.* number of total sequences, submitted and retrieved
@@ -195,23 +208,25 @@ Again we see a linear relationship for blastn and the time it takes to complete.
 
 t <- time_dat$mafftTime
 N <- time_dat$blastHits
-fit <- nls(t~b * N**a, start = list(a=2,b=0.1))
-cor(t,predict(fit))
+fit <- nls(t ~ b * N**a, start = list(a = 2, b = 0.1))
+cor(t, predict(fit))
 summary(fit)
 
 
 
-time_dat %>% 
-  ggplot(aes(x = blastHits, y = mafftTime))+
-    geom_point(shape = 1)+
-    geom_smooth(method="nls",
-                formula = y ~ b * x**a, 
-                method.args=list(start = c(a = 2, b = 0.1)), 
-                se = FALSE, colour='black', size = 0.25) +
-    annotate("text", x=190, y=1800, label = "y == 0.153 * x^1.92", parse=T)+
-  theme_bw()+
-  xlab("Number of sequences in alingment") + ylab("Time in seconds (MAFFT)")
-
+time_dat %>%
+  ggplot(aes(x = blastHits, y = mafftTime)) +
+  geom_point(shape = 1) +
+  geom_smooth(
+    method = "nls",
+    formula = y ~ b * x**a,
+    method.args = list(start = c(a = 2, b = 0.1)),
+    se = FALSE, colour = "black", size = 0.25
+  ) +
+  annotate("text", x = 190, y = 1800, label = "y == 0.153 * x^1.92", parse = T) +
+  theme_bw() +
+  xlab("Number of sequences in alingment") + 
+  ylab("Time in seconds (MAFFT)")
 
 
 ```
@@ -219,25 +234,4 @@ time_dat %>%
 
 
 Since, in multiple sequence alignment, each sequence is aligned with each other sequence, we would expect $O(N^2)$ time complexity.  We can see in our regression result that we are very close to what we expect.  And O a bit less than a sixth of a second.  Thus, if we would to analyse 16 sequences, we would retrieve $16 * 4.5 = 72$ and the multiple sequence alignment would take $0.153 * 72^{1.92} = 563$ seconds or 9 minutes, which is not bad.  Also consider that you can submit your samples and walk away.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
