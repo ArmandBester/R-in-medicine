@@ -2,7 +2,7 @@
 title: 'Analysing the HIV pandemic, Part 2: Drug resistance testing'
 author: Armand Bester, Dominique Goedhals and Andrie de Vries
 date: '2019-05-08'
-slug: pipeline-for-detecting-hiv-part-2
+slug: pipeline-for-analysing-hiv-part-2
 categories:
   - R Language
   - R in Medicine
@@ -23,7 +23,8 @@ local({
     "tidyr",
     "ggplot2",
     "knitr",
-    "kableExtra"
+    "kableExtra",
+    "broom"
   )
   
   not_installed <- setdiff(pkgs, as.data.frame(installed.packages())$Package)
@@ -44,6 +45,7 @@ suppressPackageStartupMessages({
   library(ggplot2)
   library(knitr)
   library(kableExtra)
+  library(broom)
 })
 ```
 
@@ -64,8 +66,22 @@ In the previous section, we discussed ARVs (antiretrovirals) and how these drugs
 There are various classes of ARVs which interfere with viral replication by inhibition of viral enzymes.  If the DNA or RNA sequence encoding this enzyme is changed the result might be an unfit virus not capable of further infection or replication.  On the other hand, if this mutation results in an ARV resistant virus replication and infection can still continue in the presence of the ARV in question, thus rendering the ARV inaffective in stopping replication.
 
 
-The question remains, why do people develop resistance?  The short answer: it's a numbers game.  If the patient received the correct regimen of ARVs (known as HAART or highly active antiretroviral treatment) and is taking the doses correctly the viral load will suppress.  Suppression is caused by stopping viral replication and if the virus is not replicating the error-prone reverse transcriptase can cause mutations which in turn cannot be favoured by selective pressure.  If the patient is not taking any treatment, the virus is replicating and thus inevitably mutating, but there is no selective pressure to select for these variants.  Lastly, if the patient is adhering poorly to the treatment, there are times where the effective levels of the treatment are to low to suppress viral replication completely.  In this scenario mutants with a mutation which makes them less susceptible to the treatment will replicate more than the wild type counterparts - these are called escape mutants.  The reason why this is numbers game is that the virus is mutating randomly and one resulting amino acid residue could be replaced by any of 19 other amino acid residues.  It is only when this change causes an increase in replicative fitness that this mutant can become a dominant quasispecies and the patient develops resistance.
+The question remains, why do people develop resistance?  The short answer: it's a numbers game.  If the patient received the correct regimen of ARVs (known as HAART or highly active antiretroviral treatment) and is taking the doses correctly the viral load will suppress.  Suppression is caused by stopping viral replication and if the virus is not replicating the error-prone reverse transcriptase can't cause mutations which in turn cannot be favoured by selective pressure.  If the patient is not taking any treatment, the virus is replicating and thus inevitably mutating, but there is no selective pressure to select for these variants.  Lastly, if the patient is adhering poorly to the treatment, there are times where the effective levels of the treatment are too low to suppress viral replication completely.  In this scenario mutants with a mutation which makes them less susceptible to the treatment will replicate more than the wild type counterparts - these are called escape mutants.  The reason why this is numbers game is that the virus is mutating randomly and one resulting amino acid residue could be replaced by any of 19 other amino acid residues.  It is only when this change causes an increase in replicative fitness while there is some form of selective pressure that this mutant can become a dominant quasispecies and the patient develops resistance.
 
+
+We have mentioned some classes of ARVs in the previous section of this series.  To the viral reverse transcriptase `NRTIs` (Nucleoside/Nucleotide Reverse Transcriptase Inhibitors) looks like the building blocks of `DNA` called nucleotides.  If the reverse transcriptase incorporates one of these 'fake' nucleotides, it is not able to further extend the DNA strand leaving it incomplete, thus interfering with replication.  Not all mutations cause the same level of resistance, these levels are:
+
+
+  * `Susceptible:` Total score 0 to 9
+  * `Potential low-level resistance:` Total score 10 to 14
+  * `Low-level resistance:` Total score 15 to 29
+  * `Intermediate resistance:` Total score 30 to 59
+  * `High-level resistance:` Total score >= 60
+  
+[`Source`](https://hivdb.stanford.edu/page/release-notes/)
+
+
+The plot below shows the resistance scores for five commonly used NRTIs.
 
 
 ```{r, fig.height=8, fig.width=10}
@@ -86,11 +102,119 @@ nrti_dr_scores %>%
 ```
 
 
+We can see that 3TC and FTC has the exact same profiles and these are chemicaly also very similar as shown in the figure below.
+
+---
+
+```{r 3TC and FTC, echo=FALSE, fig.cap="The chemical structures of 3TC and FTC. Available at http://aras.ab.ca/articles/HAART-Nukes-AIDS-Umber", out.extra='style="margin:50px 10px"', fig.align="center"}
+knitr::include_graphics('lamivu10.gif') 
+```
+
+---
+
+
+Also, note that some of the mutations increase susceptibility for AZT and TDF and this is indicated by a negative value for resistance.  This is called hypersusceptibility and is used by clinicians treating patients.
+
+
+Mutations are expressed as follow:
+
+
+  * AA denotes amino acid residue
+  * WT denotes Wild type (the typical genotype)
+  * Mutant means the changed genotype
+  * POS denotes the position on the protein
+
+
+[WT AA][POS][Mutant AA]
+
+
+Thus, the mutation M184V means that the wild type AA at position 184 is a methionine (M) and it has been mutated to valine (V).  Although this mutation makes the virus highly resistant to 3TC it has a crippling effect on viral replication, ie. the virus can still replicate in the presence of 3TC, but slower.  This mutation also makes the virus hypersusceptible to AZT and TDF.  The way clinicians use this is to keep patients of 3TC in order to keep the selective pressure for M184V and use AZT or TDF as the other NRTI.  It is typical to have a patient on two NRTIs, which is sometimes referred to as the back bone and then one drug from another drug class to which the patient is fully susceptible.  Knowing the genotype of the virus allows us to infer the phenotype which in this case is the drug resistance profile.
+
 
 ### PhyloPi: An affordable, purpose built phylogenetic pipeline for the HIV drug resistance testing facility
 
-Discribe phylopi
 
+The goal of HIV drug resistance genotyping is to determine on which drugs the patient will respond best and as mentioned earlier we use the viral sequence information for this.  Due to the rapid evolution of HIV, we can use this attribute in quality assurance.  PCR (polymerase chain reaction) is very sensitive to contamination and if gross cross-contamination occurred during this process, the sequences of say two unrelated individuals might be very similar.  Also, the viral sequences of a patient over time will be more similar than the sequences between different people.  Let say we have genotyped a patient five years ago and we have a current genotype sequence it should be possible to retrieve the previous sequence from a database of sequences without relying on identifiers only or at all.  Sometimes when someone remarries they may change their surname or transcription errors can be made which makes finding previous samples tedious and error-prone.  So instead of using patient information to look for previous samples to include, we can rather use the sequence data itself and then confirm the sequences belong to the same patient or investigate any irregularities.  If we suspect mother to child transfer from our analysis, we confirm this with the health care worker who sent the sample.  
+
+
+Researchers recently published an automated pipeline for maintaining a sequence database, automatically retrieving the most similar sequences from previous genotyped viral isolates, calculating genetic distances and phylogenetic inference.  Let's look at each of these steps.  Firstly, we cannot conduct phylogenetic analysis on all past and present sequences, this will be very computationally expensive and time-consuming and the result will be very difficult to interpret.  Rather we want to focus on the current batch of sequences the laboratory generated, but also the most similar sequences from previous batches stored in our rolling database.  We used a tool called [`BLAST`](https://blast.ncbi.nlm.nih.gov/Blast.cgi?CMD=Web&PAGE_TYPE=BlastDocs&DOC_TYPE=Download) (Basic Local Alignment Search Tool) for this.  This tool is used to add our new submissions to the current rolling database and then also retrieve the most similar previous sequences.  These sequences are aligned using [`MAFFT`](https://mafft.cbrc.jp/alignment/software/).  The resulting multiple sequence alignment is automatically curated with [`trimAl`](http://trimal.cgenomics.org/).  Finally, the sequences are ready for phylogenetic inference.  For this, we used [`FastTree`](http://www.microbesonline.org/fasttree/).  As its name implies, it is fast and capable of handling large datasets requiring minimal resources.  The resulting tree is rendered using the [`ETE3`](http://etetoolkit.org/) python API.  R is used to calculate a distance matrix from the multiple sequence alignment using the [`ape`](https://cran.r-project.org/web/packages/ape/index.html) library and [`plotly`](https://plot.ly/r/) for visualization.  In an upcoming section, we will talk more about the distance matrix calculation and how logistic regression was used to look at inter- and intra patient genetic distances of HIV sequences by mining a large public database.  This was important, the insights gained here were used to colour the distance matrix so that the user's attention is drawn to relevant samples.  
+
+
+This is an R for medicine blog post, but there is a lot of jargon in the paragraph above.  We can clear thing up a bit, but please check out our [`publication`](https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0213241).
+
+
+Firstly, our DNA sequences are strings consisting of an alphabet: A, C, G, T.  Also, genetic distances are much like Levenshtein or Hamming distances or other edit distance algorithms.
+
+
+Consider the following strings, A, B and C
+
+
+  * A: peter kicked the ball realy far
+  * B: i think it was yesterday when peter kicked the ball realy far
+  * C: pieter kicked the round ball realy hard
+
+
+We can see that there are obvious similarities between these three sentances, but it would be much easier if they where aligned.
+
+
+
+**Aligned strings**
+
+```
+
+   A: ______________________________p eter kicked the _____ ball realy far
+   B: i think it was yesterday when p eter kicked the _____ ball realy far
+   C: ______________________________pieter kicked the round ball realy hard
+
+```
+
+By aligning the string it is much easier to calculate the similarities or differences.  Next, we remove the overhangs since it is possible that in reality strings A and C also had more text on the left-hand side, but it was not sampled.  Depending on your situation, we could also remove the internal 'gaps' like the word 'round'.  For our pipeline, insertions and deletions, like the letter 'i' in our example and the word 'round' are real features we would like to include.  We also have a substitution in C, where the 'f' in A and B was changed to an 'h'.
+
+
+                              
+**Curated strings**
+
+```
+
+   A: p eter kicked the _____ ball realy far
+   B: p eter kicked the _____ ball realy far
+   C: pieter kicked the round ball realy har
+  
+```
+
+
+                              
+**Calculation**
+
+```
+
+   A: p eter kicked the _____ ball realy far
+   B: p eter kicked the _____ ball realy far
+   M: 111111 111111 111 11111 1111 11111 111
+  
+```  
+  
+We can see for A and B we have matches for all of the features.  If we sum up all the ones, we get, 32, so the distance between them:
+
+
+$$ d = \frac{32 - 32}{32} = 0$$
+       
+```  
+  
+   B: p eter kicked the _____ ball realy far
+   C: pieter kicked the round ball realy har
+   M: 101111 111111 111 00000 1111 11111 011
+
+```
+
+
+$$ d = \frac{32 - 25}{32} = 0.219$$
+  
+
+After the multiple sequence alignment and curation, each sequence is compared to each in order to calculate a distance matrix.  This can then be used to create a phylogenetic tree, like a kind of dendrogram which can be calculated using hierarchical clustering.  The above is very simplified but should give enough background to understand the rest of the post.  The resource below is a good place to get started if you want to know more:
+
+
+[`EMBL-EBI Train Online`](https://www.ebi.ac.uk/training/online/course/introduction-phylogenetics/what-phylogenetics)
 
 
 ### It's more than a toy.
@@ -104,16 +228,13 @@ The [Raspberry Pi](https://www.raspberrypi.org/) is a small and cheap single boa
 
 Just some examples.  
 
-One of the motivations behind developing this computer was to teach kids to [code or engache in electronics](http://blog.sparkfuneducation.com/teaching-coding-to-kids-using-raspberry-pi-3-and-scratch)
+One of the motivations behind developing this computer was to teach kids to [code or engage in electronics](http://blog.sparkfuneducation.com/teaching-coding-to-kids-using-raspberry-pi-3-and-scratch)
 
 All the above mentioned are very important, but the Raspberry Pi has made its way into science and medicine as well.
 
 A group developed a cheap [instrument](https://pubs.rsc.org/en/content/articlehtml/2017/sc/c7sc03281a) to diagnose Ebola virus infection in the field.  Researchers can attach various sensors to the Raspberry Pi and use it for data collection.
 
-For our application, we needed to show that the Pi, can handle the problem we wanted it to solve and thus we did some benchmarking. We used the [Selenium WebDriver](https://www.seleniumhq.org/) to operate the pipeline as a human would, by actually browsing for an input file and submitting it through the button.  Time stamps were taken for each step and the amount of blast hist that was included in the phylogenetic inference was also recorded.  For this exercise, we set the amount of the closest sequences to retrieve for each sample to 5, which means the submitted sample and 4 of the genetically closest samples.  However, it is possible that different submitted sequences have a retrieved a sequence in common, these will be included in the analysis only once. When we start analyzing this data we will see this.
-
-
-
+For our application, we needed to show that the Pi, can handle the problem we wanted it to solve and thus we did some benchmarking. We used the [Selenium WebDriver](https://www.seleniumhq.org/) to operate the pipeline as a human would, by actually browsing for an input file and submitting it through the button.  Time stamps were taken for each step and the number of blast hits that were included in the phylogenetic inference was also recorded.  For this exercise, we set the amount of the closest sequences to retrieve for each sample to 5, which means the submitted sample and 4 of the genetically closest samples.  However, it is possible that different submitted sequences have a retrieved a sequence in common, these will be included in the analysis only once. When we start analyzing this data we will see this.
 
 
 Read in the data.
@@ -131,7 +252,9 @@ head(time_dat) %>%
   kable_styling(bootstrap_options = c("striped", "hover"))
 ```
 
-The 'Run' column shows some info regarding the benchmarking experiment, we know we asked for the 5 best hits to be included, the sequences were pseudo-randomly selected and then lastly we started with 1 sequence for submission and then incremented this by 1 up to 50.  This again shows how data is not always in the best format for working with.  We need to extract the digits at the end of the Run variable.  Previously we used the tidyr gather function to make wide data long.  This time we will use the spread function to make long data wide.
+
+The 'Run' column shows some info regarding the benchmarking experiment, we know we asked for the 5 best hits to be included, the sequences were pseudo-randomly selected.  We started with 1 sequence for submission and then incremented this by 1 up to 50.  The above again shows how data is not always in the best format for working with.  We need to extract the digits at the end of the Run variable.  Previously we used the tidyr gather function to make wide data long.  This time we will use the spread function to make long data wide.
+
 
 ```{r}
 time_dat <- time_dat %>% 
@@ -152,15 +275,15 @@ Below the explanations for the variables.
 - `nSubmitted`: Number of sequences submitted or uploaded to the pipeline
 - `blast`: time in seconds for blast to find most similar previously sequenced samples
 - `blastHits`: the number of sequences retrieved
+- `mafftTime`: the time it took to create a multiple sequence alignment
+- `trimalTime`: the time it took to clean the multiple sequence alignment
 - `fasttreeTime`: the time it took for phylogenetic inference
 - `heatmapTime`: the time it took to produce the heatmap
-- `mafftTime`: the time it took to create a multiple sequence alignment
 - `renderTime`: the time it took to render the tree
-- `trimalTime`: the time it took to clean the multiple sequence alignment
-
 
 
 #### Number of sequences submitted  *vs.* most similar sequences retrieved
+
 
 ```{r}
 time_dat %>%
@@ -175,10 +298,14 @@ time_dat %>%
 
 
 fit <- lm(time_dat$blastHits ~ time_dat$nSubmitted - 1)
-summary(fit)
+tidy(fit) %>% 
+  kable(format = "html", caption = "Regression analysis of the number of blast hits retrieved.") %>% 
+  kable_styling(bootstrap_options = c("striped", "hover"))
+
+
 ```
 
-A linear line fits the data really well.  I mentioned that if different sequences retrieve the same sequence from the database, it is used only once.  The slope of this line will depend on the genetic diversity of the database.  A more diverse database will have a steeper slope, whereas a less diverse database will have a shallower slope.  Also, theoretically, at some point, the line will reach an asymptote as the number of requested sequences start to saturate the number of available sequences.  Practically, one would not have to submit more than 16 - 24 samples at a time, thus we are in the linear part of the rarefaction curve.  We can thus see from this, that for the Los Alamos data used in the analysis about 4.5 sequences get retrieved for every sequence submitted.  
+A linear line fits the data really well.  We mentioned that if different sequences retrieve the same sequence from the database, it is used only once.  The slope of this line will depend on the genetic diversity of the database.  A more diverse database will have a steeper slope, whereas a less diverse database will have a shallower slope.  Also, theoretically, at some point, the line will reach an asymptote as the number of requested sequences start to saturate the number of available sequences.  Practically, one would not have to submit more than 16 - 24 samples at a time, thus we are in the linear part of the rarefaction curve.  We can thus see from this, that for the Los Alamos data used in the analysis about 4.5 sequences get retrieved for every sequence submitted.  
 
 
 #### BLAST time *vs.* number of sequences submitted
@@ -195,7 +322,11 @@ time_dat %>%
 
 
 fit <- lm(time_dat$blast ~ time_dat$nSubmitted)
-summary(fit)
+
+tidy(fit) %>% 
+  kable(format = "html", caption = "Regression analysis of blastn time vs. number of sequences.") %>% 
+  kable_styling(bootstrap_options = c("striped", "hover"))
+
 ```
 
 
@@ -209,9 +340,6 @@ Again we see a linear relationship for blastn and the time it takes to complete.
 t <- time_dat$mafftTime
 N <- time_dat$blastHits
 fit <- nls(t ~ b * N**a, start = list(a = 2, b = 0.1))
-cor(t, predict(fit))
-summary(fit)
-
 
 
 time_dat %>%
@@ -229,9 +357,26 @@ time_dat %>%
   ylab("Time in seconds (MAFFT)")
 
 
+tidy(fit) %>% 
+  kable(format = "html", caption = "Regression analysis of multiple sequence alingment.") %>% 
+  kable_styling(bootstrap_options = c("striped", "hover"))
 ```
 
 
+To see how good our model fits the data we can use the cor function in R, cor(t, predict(fit)).  
+
+Which gives: **`r cor(t, predict(fit))`**
+
 
 Since, in multiple sequence alignment, each sequence is aligned with each other sequence, we would expect $O(N^2)$ time complexity.  We can see in our regression result that we are very close to what we expect.  And O a bit less than a sixth of a second.  Thus, if we would to analyse 16 sequences, we would retrieve $16 * 4.5 = 72$ and the multiple sequence alignment would take $0.153 * 72^{1.92} = 563$ seconds or 9 minutes, which is not bad.  Also consider that you can submit your samples and walk away.
+
+
+It is important to mention that PhyloPi is not used for tracking or detecting transmission clusters, but rather offers a way of automating phylogenetic analysis.  Some patients will be genotyped more than once and these sequences will cluster very closely on a phylogenetic tree.  This offers a spot check into the quality of the results.  Sometimes we find that the patient has two different first names, which they interchangeably use depending on the health care worker and patient language preference.  We have also detected sample swabs which otherwise would have gone unnoticed.  
+
+
+In the next section, we will discuss how the inter- and intrapatient HIV genetic distances were analyzed by logistic regression to gain insights into the probability distribution of these two classes.  This is also where we asked Andrie from RStudio for help.  It was useful for us biologists and virologists to have someone not just to oversee analysis we did, but also to implement the correct analysis to get the job done.  Hope to see you in the next section.
+
+
+
+
 
