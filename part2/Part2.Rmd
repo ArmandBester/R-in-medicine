@@ -172,12 +172,11 @@ This is an R for medicine blog post, but there is a lot of jargon in the paragra
 
 ## How does it work?
 
-Firstly, our DNA sequences are strings consisting of an alphabet: A, C, G, and T.  Also, genetic distances are much like Levenshtein or Hamming distances or other edit distance algorithms.
-
-
-Consider the following strings, A, B and C
+Firstly, our DNA sequences are strings consisting of an alphabet: A, C, G, and T.  Also, genetic distances are much like [Levenshtein](https://en.wikipedia.org/wiki/Levenshtein_distance) or [Hamming](https://en.wikipedia.org/wiki/Hamming_distance) distances or other [edit distance](https://en.wikipedia.org/wiki/Edit_distance) algorithms.
 
 ### Raw strings
+
+Consider the following strings, A, B and C:
 
 ```
 A: peter kicked the ball really far
@@ -196,9 +195,11 @@ B: i think it was yesterday when p eter kicked the _____ ball really far
 C: ______________________________pieter kicked the round ball really hard
 ```
 
-By aligning the string it is much easier to calculate the similarities or differences.  Next, we remove the overhangs since it is possible that in reality strings A and C also had more text on the left-hand side, but it was not sampled.  Depending on your situation, we could also remove the internal 'gaps' like the word 'round'.  For our pipeline, insertions and deletions, like the letter 'i' in our example and the word 'round' are real features we would like to include.  We also have a substitution in C, where the 'f' in A and B was changed to an 'h'.
+By aligning the string it is much easier to calculate the similarities or differences.
 
 ### Curated strings
+
+Next, we remove the overhangs since it is possible that in reality strings A and C also had more text on the left-hand side, but it was not sampled.  Depending on your situation, we could also remove the internal 'gaps' like the word 'round'.  For our pipeline, insertions and deletions, like the letter 'i' in our example and the word 'round' are real features we would like to include.  We also have a substitution in C, where the 'f' in A and B was changed to an 'h'.
 
 ```
 A: p eter kicked the _____ ball really far
@@ -212,17 +213,17 @@ C: pieter kicked the round ball really har
 ```
 A: p eter kicked the _____ ball really far
 B: p eter kicked the _____ ball really far
-M: 111111 111111 111 11111 1111 11111 111
+M: 111111 111111 111 11111 1111 111111 111
 ```
 
-We can see for A and B we have matches for all of the features.  If we sum up all the ones, we get, 32, so the distance between them:
+We can see for A and B we have matches for all of the features.  If we sum up all the ones, we get 33, so the distance between them:
 
   $$ d = \frac{33 - 33}{33} = 0$$
        
 ```
 B: p eter kicked the _____ ball really far
 C: pieter kicked the round ball really har
-M: 101111 111111 111 00000 1111 11111 011
+M: 101111 111111 111 00000 1111 111111 011
 ```
 
   $$ d = \frac{33 - 26}{33} = 0.212$$
