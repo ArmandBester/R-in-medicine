@@ -334,27 +334,19 @@ tidy(fit) %>%
 ```
 
 
-Again we see a linear relationship for `blastn` and the time it takes to complete.  For every sequence submitted it takes about 11 seconds to search a database of about 11 000 sequence entries.  We can say the `blastn` displays linear time complexity or $O(n)$ time.  We did not discover anything new here. Remember, the purpose of this is to show off the Pi flexing its muscles.  You can read about the BLAST algorithm [here](https://www.ncbi.nlm.nih.gov/pubmed/2231712).  
+Again we see a linear relationship for `blastn` and the time it takes to complete.  For every sequence submitted it takes about 11 seconds to search a database of about 11 thousand sequence entries.  We can say the `blastn` displays linear time complexity or $O(n)$ time.  We did not discover anything new here. Remember, the purpose of this is to show off the Pi flexing its muscles.  (You can read about the BLAST algorithm [here](https://www.ncbi.nlm.nih.gov/pubmed/2231712).)
 
 
 #### Multiple sequence alignment time *vs.* number of total sequences, submitted and retrieved
 
 ```{r}
-fit <- nls(mafftTime ~ b * blastHits^a, 
-           start = list(a = 2, b = 0.1), 
-           data = time_dat)
+fit <- lm(mafftTime ~ I(blastHits^2) - 1, data = time_dat)
 
 time_dat %>%
   ggplot(aes(x = blastHits, y = mafftTime)) +
   geom_point(colour = "blue") +
-  geom_smooth(
-    method = "nls",
-    formula = y ~ b * x^a,
-    se = FALSE, 
-    method.args = list(start = c(a = 2, b = 0.1)),
-    colour = "black", size = 0.25
-  ) +
-  annotate("text", x = 190, y = 1800, label = "y == 0.153 * x^1.92", parse = TRUE) +
+  geom_smooth(method = "lm",formula = y ~ I(x^2) - 1, colour = "black", size = 0.25) +
+  annotate("text", x = 190, y = 1800, label = "y == 0.09997 * x^2", parse = TRUE) +
   theme_bw() +
   xlab("Number of sequences in alignment") + 
   ylab("Time in seconds (MAFFT)")
@@ -367,7 +359,7 @@ tidy(fit) %>%
 
 
 
-Since, in multiple sequence alignment, each sequence is aligned with each other sequence, we would expect $O(N^2)$ time complexity.  We can see in our regression result that we are very close to what we expect.  And $O$ a bit less than a sixth of a second.  Thus, if we would analyse 16 sequences, we would retrieve $16 * 4.5 = 72$ and the multiple sequence alignment would take $0.153 * 72^{1.92} = 563$ seconds or ~9 minutes, which is not bad.  Also consider that you can submit your samples and walk away.
+Since, in multiple sequence alignment, each sequence is aligned with each other sequence, we would expect $O(N^2)$ time complexity.  We can see in our regression result that we are very close to what we expect.  And $O$ a bit less than a sixth of a second.  Thus, if we would analyse 16 sequences, we would retrieve $16 * 4.5 = 72$ and the multiple sequence alignment would take $0.09997 * 72^2 = 518$ seconds or ~8.6 minutes, which is not bad.  Also consider that you can submit your samples and walk away.
 
 ### Impact
 
