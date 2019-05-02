@@ -172,82 +172,83 @@ This is an R for medicine blog post, but there is a lot of jargon in the paragra
 
 ## How does it work?
 
-Firstly, our DNA sequences are strings consisting of an alphabet: A, C, G, and T.  Also, genetic distances are much like Levenshtein or Hamming distances or other edit distance algorithms.
-
-
-Consider the following strings, A, B and C
+Firstly, our DNA sequences are strings consisting of an alphabet: A, C, G, and T.  Also, genetic distances are much like [Levenshtein](https://en.wikipedia.org/wiki/Levenshtein_distance) or [Hamming](https://en.wikipedia.org/wiki/Hamming_distance) distances or other [edit distance](https://en.wikipedia.org/wiki/Edit_distance) algorithms.
 
 ### Raw strings
 
-  A: `peter kicked the ball realy far`
-  B: `i think it was yesterday when peter kicked the ball realy far`
-  C: `pieter kicked the round ball realy hard`
+Consider the following strings, A, B and C:
 
+```
+A: peter kicked the ball really far
+B: i think it was yesterday when peter kicked the ball really far
+C: pieter kicked the round ball really hard
+```
 
 We can see that there are obvious similarities between these three sentences, but it would be much easier if they where aligned.
 
 ### Aligned strings
 
-  A: `______________________________p eter kicked the _____ ball realy far`
-  B: `i think it was yesterday when p eter kicked the _____ ball realy far`
-  C: `______________________________pieter kicked the round ball realy hard`
 
+```
+A: ______________________________p eter kicked the _____ ball really far
+B: i think it was yesterday when p eter kicked the _____ ball really far
+C: ______________________________pieter kicked the round ball really hard
+```
 
-By aligning the string it is much easier to calculate the similarities or differences.  Next, we remove the overhangs since it is possible that in reality strings A and C also had more text on the left-hand side, but it was not sampled.  Depending on your situation, we could also remove the internal 'gaps' like the word 'round'.  For our pipeline, insertions and deletions, like the letter 'i' in our example and the word 'round' are real features we would like to include.  We also have a substitution in C, where the 'f' in A and B was changed to an 'h'.
+By aligning the string it is much easier to calculate the similarities or differences.
 
 ### Curated strings
 
-  A: `p eter kicked the _____ ball realy far`
-  B: `p eter kicked the _____ ball realy far`
-  C: `pieter kicked the round ball realy har`
+Next, we remove the overhangs since it is possible that in reality strings A and C also had more text on the left-hand side, but it was not sampled.  Depending on your situation, we could also remove the internal 'gaps' like the word 'round'.  For our pipeline, insertions and deletions, like the letter 'i' in our example and the word 'round' are real features we would like to include.  We also have a substitution in C, where the 'f' in A and B was changed to an 'h'.
+
+```
+A: p eter kicked the _____ ball really far
+B: p eter kicked the _____ ball really far
+C: pieter kicked the round ball really har
+```
 
 ### Calculation
 
-  A: `p eter kicked the _____ ball realy far`
-  B: `p eter kicked the _____ ball realy far`
-  M: `111111 111111 111 11111 1111 11111 111`
 
-We can see for A and B we have matches for all of the features.  If we sum up all the ones, we get, 32, so the distance between them:
+```
+A: p eter kicked the _____ ball really far
+B: p eter kicked the _____ ball really far
+M: 111111 111111 111 11111 1111 111111 111
+```
 
-  $$ d = \frac{32 - 32}{32} = 0$$
+We can see for A and B we have matches for all of the features.  If we sum up all the ones, we get 33, so the distance between them:
+
+  $$ d = \frac{33 - 33}{33} = 0$$
        
-   B: `p eter kicked the _____ ball realy far`
-   C: `pieter kicked the round ball realy har`
-   M: `101111 111111 111 00000 1111 11111 011`
+```
+B: p eter kicked the _____ ball really far
+C: pieter kicked the round ball really har
+M: 101111 111111 111 00000 1111 111111 011
+```
 
-  $$ d = \frac{32 - 25}{32} = 0.219$$
+  $$ d = \frac{33 - 26}{33} = 0.212$$
 
 
-After the multiple sequence alignment and curation, each sequence is compared to each in order to calculate a distance matrix.  This can then be used to create a phylogenetic tree, like a kind of dendrogram which can be calculated using hierarchical clustering.  The above is very simplified but should give enough background to understand the rest of the post.  The resource below is a good place to get started if you want to know more:
-
-
-[EMBL-EBI Train Online](https://www.ebi.ac.uk/training/online/course/introduction-phylogenetics/what-phylogenetics)
+After the multiple sequence alignment and curation, each sequence is compared to each in order to calculate a distance matrix.  This can then be used to create a phylogenetic tree, like a kind of dendrogram which can be calculated using hierarchical clustering.  The above is very simplified but should give enough background to understand the rest of the post.  The resource at [EMBL-EBI Train Online](https://www.ebi.ac.uk/training/online/course/introduction-phylogenetics/what-phylogenetics) is a good place to get started if you want to know more
 
 ## The pipeline on a Raspberry Pi
 
 
-The [Raspberry Pi](https://www.raspberrypi.org/) is a small and cheap single board computer.  It is used amongst many hobbyists for all kinds of projects:
+The [Raspberry Pi](https://www.raspberrypi.org/) is a small and cheap single board computer.  It is used amongst many hobbyists for all kinds of projects, for example:
 
 - [Militarizing Your Backyard with Python: Computer Vision and the Squirrel Hordes](https://pyvideo.org/pycon-us-2012/militarizing-your-backyard-with-python-computer.html)
 - [Brewing beer with the help of R](https://hackaday.com/2013/01/20/raspberry-pi-and-r/)
 - [Retro gaming machines](https://retropie.org.uk/)
 
-Just some examples.  
-
 One of the motivations behind developing this computer was to teach kids to [code or engage in electronics](http://blog.sparkfuneducation.com/teaching-coding-to-kids-using-raspberry-pi-3-and-scratch)
 
-All the above mentioned are very important, but the Raspberry Pi has made its way into science and medicine as well.
-
-A group developed a cheap [instrument](https://pubs.rsc.org/en/content/articlehtml/2017/sc/c7sc03281a) to diagnose Ebola virus infection in the field.  Researchers can attach various sensors to the Raspberry Pi and use it for data collection.
+All the above mentioned are very important, but the Raspberry Pi has made its way into **science and medicine** as well.  For example, a group developed a cheap [instrument](https://pubs.rsc.org/en/content/articlehtml/2017/sc/c7sc03281a) to diagnose Ebola virus infection in the field.  Researchers can attach various sensors to the Raspberry Pi and use it for data collection.
 
 ### Benchmarking
 
 For our application, we needed to show that the Pi can handle the problem we wanted it to solve and thus we did some benchmarking.
 
 We used the [Selenium WebDriver](https://www.seleniumhq.org/) to operate the pipeline as a human would, by actually browsing for an input file and submitting it through the button.  Time stamps were taken for each step and the number of blast hits that were included in the phylogenetic inference was also recorded.  For this exercise, we set the amount of the closest sequences to retrieve for each sample to 5, which means the submitted sample and 4 of the genetically closest samples.  However, it is possible that different submitted sequences have a retrieved a sequence in common, these will be included in the analysis only once. When we start analyzing this data we will see this.
-
-
-Read in the data.
 
 ```{r import, results='asis'}
 # Read csv with time data
@@ -262,7 +263,7 @@ head(time_dat) %>%
 ```
 
 
-The 'Run' column shows some info regarding the benchmarking experiment, we know we asked for the 5 best hits to be included, the sequences were pseudo-randomly selected.  We started with 1 sequence for submission and then incremented this by 1 up to 50.  The above again shows how data is not always in the best format for working with.  We need to extract the digits at the end of the Run variable.  Previously we used the tidyr gather function to make wide data long.  This time we will use the spread function to make long data wide.
+The `Run` column shows some info regarding the benchmarking experiment.  We know we asked for the 5 best hits to be included, the sequences were pseudo-randomly selected.  We started with 1 sequence for submission and then incremented this by 1 up to 50.  The above again shows how data is not always in the best format for working with.  We need to extract the digits at the end of the Run variable.  Previously we used the `tidyr::gather()` function to pivot data from wide to long.  This time we will use the `spread()` function to make long data wide.
 
 
 ```{r, results='asis'}
@@ -275,7 +276,7 @@ head(time_dat) %>%
   kable(caption = "First few lines of the benchmarking data after some cleaning.")
 ```
 
-We now got rid of the useless data in the Run variable and extracted the useful information into nSubmitted variable.
+We now got rid of the useless data in the `Run` variable and extracted the useful information into `nSubmitted` variable.
 
 Below the explanations for the variables.
 
@@ -333,7 +334,7 @@ tidy(fit) %>%
 ```
 
 
-Again we see a linear relationship for blastn and the time it takes to complete.  For every sequence submitted it takes about 11 seconds to search a database of about 11 000 sequence entries.  We can say the blastn displays linear time complexity or O(n) time.  We did not discover anything new here. Remember, the purpose of this is to show off the Pi flexing its muscles.  You can read about the BLAST algorithm [here](https://www.ncbi.nlm.nih.gov/pubmed/2231712).  
+Again we see a linear relationship for `blastn` and the time it takes to complete.  For every sequence submitted it takes about 11 seconds to search a database of about 11 000 sequence entries.  We can say the `blastn` displays linear time complexity or $O(n)$ time.  We did not discover anything new here. Remember, the purpose of this is to show off the Pi flexing its muscles.  You can read about the BLAST algorithm [here](https://www.ncbi.nlm.nih.gov/pubmed/2231712).  
 
 
 #### Multiple sequence alignment time *vs.* number of total sequences, submitted and retrieved
@@ -366,7 +367,7 @@ tidy(fit) %>%
 
 
 
-Since, in multiple sequence alignment, each sequence is aligned with each other sequence, we would expect $O(N^2)$ time complexity.  We can see in our regression result that we are very close to what we expect.  And O a bit less than a sixth of a second.  Thus, if we would to analyse 16 sequences, we would retrieve $16 * 4.5 = 72$ and the multiple sequence alignment would take $0.153 * 72^{1.92} = 563$ seconds or 9 minutes, which is not bad.  Also consider that you can submit your samples and walk away.
+Since, in multiple sequence alignment, each sequence is aligned with each other sequence, we would expect $O(N^2)$ time complexity.  We can see in our regression result that we are very close to what we expect.  And $O$ a bit less than a sixth of a second.  Thus, if we would analyse 16 sequences, we would retrieve $16 * 4.5 = 72$ and the multiple sequence alignment would take $0.153 * 72^{1.92} = 563$ seconds or ~9 minutes, which is not bad.  Also consider that you can submit your samples and walk away.
 
 ### Impact
 
