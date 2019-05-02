@@ -50,35 +50,44 @@ file_path <- "."
 
 ## Introduction
 
-This 4 part series covers topics of HIV AIDS.  In this first part, we discussed the HIV pandemic in Sub-Saharan Africa.  In the this second installment, we discuss a recent publication in [PLoS ONE](https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0213241).  The authors described how they used affordable hardware to create a [phylogenetic](https://en.wikipedia.org/wiki/Phylogenetics) pipeline, tailored for the HIV drug resistance testing facility. 
+In [part 1](https://rviews.rstudio.com/2019/04/30/analysing-hiv-pandemic-part-1/) of this four-part series about HIV AIDS, we discussed the [HIV pandemic in Sub-Saharan Africa](https://rviews.rstudio.com/2019/04/30/analysing-hiv-pandemic-part-1/).  In this second instalment, we cover a recent publication in the [PLoS ONE journal](<https://journals.plos.org/plosone/>): "[PhyloPi: An affordable, purpose built phylogenetic pipeline for the HIV drug resistance testing facility](https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0213241)".
 
-### HIV drug resistance
+The authors described how they used affordable hardware to create a [phylogenetic](https://en.wikipedia.org/wiki/Phylogenetics) pipeline, tailored for the HIV drug resistance testing facility. 
 
-Natural selection is the process by which some form of selective pressure favours a phenotypic trait or change.  These phenotypic traits can be the blood group of a person, whether a pea is wrinkly or not or whether an infectious organism is susceptible or resistant to a drug.  Many times these phenotypic traits, or physical attributes, are caused by genetics.  Genotyping is the process by which one can infer this phenotypic trait from a genotype and this is used more and more frequently in medicine.  In breast cancer treatment, the BRCA (BReast CAncer) genes are genotyped to determine whether these cancer suppressing genes are intact.  If there is a deleterious or damaging mutation in one of these genes it can increase the risk of developing breast cancer, thus a phenotype of increased risk of breast cancer.  For most organisms copying of genetic material happens by very precise enzymes or pathways, but occasionally mutations do occur.  If a mutation occurs and is sufficiently damaging it gets removed from the gene pool.  However, if the mutation is sufficiently beneficial it increases the survival of this genetic variation and might biasly select for it.
+## HIV drug resistance
 
+Natural selection is the process by which some form of selective pressure favours a **phenotypic** trait or change.  These phenotypic traits can be the blood group of a person, whether a pea is wrinkly or not or whether an infectious organism is susceptible or resistant to a drug.  Many times these phenotypic traits, or physical attributes, are caused by genetics. 
 
-In the previous section, we discussed ARVs (antiretrovirals) and how these drugs changed the landscape of HIV infection by preventing the development of AIDS.  We mentioned that ARVs suppress viral replication.  One of the steps in HIV replication is the conversion of it's single-stranded RNA to DNA which can then be incorporated into the DNA of infected cells.  The enzyme responsible for this conversion is reverse transcriptase and it has a high error rate when doing this conversion.  One can thus say that HIV has a high evolutionary rate or mutation rate.  These genes are translated into viral proteins which are required to make more virions (viral particles).  Proteins are strings or polymers of amino acid residues with an alphabet of 20 choices of amino acids or letters.  The sequence of the DNA or RNA influences the sequence of the protein, thus mutations in the DNA or RNA can result in changes in the protein and our targets for stopping HIV replication are proteins/enzymes.
+**Genotyping** is the process by which one can infer this phenotypic trait from a genotype and this is used more and more frequently in medicine.  In breast cancer treatment, the BRCA (BReast CAncer) genes are genotyped to determine whether these cancer suppressing genes are intact.  If there is a deleterious or damaging mutation in one of these genes it can increase the risk of developing breast cancer, thus a phenotype of increased risk of breast cancer.
 
-
-There are various classes of ARVs which interfere with viral replication by inhibition of viral enzymes.  If the DNA or RNA sequence encoding this enzyme is changed the result might be an unfit virus not capable of further infection or replication.  On the other hand, if this mutation results in an ARV resistant virus replication and infection can still continue in the presence of the ARV in question, thus rendering the ARV inaffective in stopping replication.
-
-
-The question remains, why do people develop resistance?  The short answer: it's a numbers game.  If the patient received the correct regimen of ARVs (known as HAART or highly active antiretroviral treatment) and is taking the doses correctly the viral load will suppress.  Suppression is caused by stopping viral replication and if the virus is not replicating the error-prone reverse transcriptase can't cause mutations which in turn cannot be favoured by selective pressure.  If the patient is not taking any treatment, the virus is replicating and thus inevitably mutating, but there is no selective pressure to select for these variants.  Lastly, if the patient is adhering poorly to the treatment, there are times where the effective levels of the treatment are too low to suppress viral replication completely.  In this scenario mutants with a mutation which makes them less susceptible to the treatment will replicate more than the wild type counterparts - these are called escape mutants.  The reason why this is numbers game is that the virus is mutating randomly and one resulting amino acid residue could be replaced by any of 19 other amino acid residues.  It is only when this change causes an increase in replicative fitness while there is some form of selective pressure that this mutant can become a dominant quasispecies and the patient develops resistance.
+For most organisms, the copying of genetic material happens by very precise enzymes or pathways, but occasionally mutations do occur.  If a mutation occurs and is sufficiently damaging it gets removed from the gene pool.  However, if the mutation is sufficiently beneficial it increases the survival of this genetic variation and might biasly select for it.
 
 
-We have mentioned some classes of ARVs in the previous section of this series.  To the viral reverse transcriptase `NRTIs` (Nucleoside/Nucleotide Reverse Transcriptase Inhibitors) looks like the building blocks of `DNA` called nucleotides.  If the reverse transcriptase incorporates one of these 'fake' nucleotides, it is not able to further extend the DNA strand leaving it incomplete, thus interfering with replication.  Not all mutations cause the same level of resistance, these levels are:
+In the [previous post](https://rviews.rstudio.com/2019/04/30/analysing-hiv-pandemic-part-1/), we discussed **ARVs** (antiretrovirals) and how these drugs changed the landscape of HIV infection by preventing the development of AIDS.  We mentioned that ARVs suppress viral replication.  One of the steps in HIV replication is the conversion of its single-stranded RNA to DNA which can then be incorporated into the DNA of infected cells.  The enzyme responsible for this conversion is reverse transcriptase and it has a high error rate when doing this conversion.  One can thus say that HIV has a high evolutionary rate or mutation rate.  These genes are translated into viral proteins which are required to make more virions (viral particles).  Proteins are strings or polymers of amino acid residues with an alphabet of 20 choices of amino acids or letters.  The sequence of the DNA or RNA influences the sequence of the protein, thus mutations in the DNA or RNA can result in changes in the protein and our targets for stopping HIV replication are proteins/enzymes.
 
 
-  * `Susceptible:` Total score 0 to 9
-  * `Potential low-level resistance:` Total score 10 to 14
-  * `Low-level resistance:` Total score 15 to 29
-  * `Intermediate resistance:` Total score 30 to 59
-  * `High-level resistance:` Total score >= 60
-  
-[`Source`](https://hivdb.stanford.edu/page/release-notes/)
+There are various classes of ARVs which interfere with viral replication by inhibition of viral enzymes.  If the DNA or RNA sequence encoding this enzyme is changed, the result might be an unfit virus not capable of further infection or replication.  On the other hand, if this mutation results in an ARV resistant virus replication and infection can still continue in the presence of the ARV in question, it may cause the ARV ineffective in stopping replication.
+
+The question remains, why do people develop resistance?  The short answer: it's a numbers game.
+
+If the patient received the correct regimen of ARVs (known as **HAART** or highly active antiretroviral treatment) and is taking the doses correctly, the viral load will suppress.  Suppression is caused by stopping viral replication and if the virus is not replicating the error-prone reverse transcriptase can't cause mutations which in turn cannot be favoured by selective pressure.  If the patient is not taking any treatment, the virus is replicating and thus inevitably mutating, but there is no selective pressure to select for these variants.  Lastly, if the patient is adhering poorly to the treatment, there are times where the effective levels of the treatment are too low to suppress viral replication completely.  In this scenario mutants with a mutation which makes them less susceptible to the treatment will replicate more than the wild type counterparts - these are called escape mutants.
+
+The reason why this is numbers game is that the virus is mutating randomly and one resulting amino acid residue could be replaced by any of 19 other amino acid residues.  It is only when this change causes an increase in replicative fitness while there is some form of selective pressure that this mutant can become a dominant quasi-species and the patient develops resistance.
+
+We have mentioned some classes of ARVs in part 1.  To the viral reverse transcriptase **NRTIs** (Nucleoside/Nucleotide Reverse Transcriptase Inhibitors) looks like the building blocks of DNA called nucleotides.  If the reverse transcriptase incorporates one of these 'fake' nucleotides, it is not able to further extend the DNA strand leaving it incomplete, thus interfering with replication.  Not all mutations cause the same level of resistance, these levels are:
+
+| Level                          | Total score |
+| ------------------------------ | ----------- |
+| Susceptible                    | 0 to 9      |
+| Potential low-level resistance | 10 to 14    |
+| Low-level resistance           | 15 to 29    |
+| Intermediate resistance        | 30 to 59    |
+| High-level resistance          | >= 60       |
+
+[Source](https://hivdb.stanford.edu/page/release-notes/)
 
 
-The plot below shows the resistance scores for five commonly used NRTIs.
+We can plot resistance scores for five commonly used NRTIs.
 
 ```{r load, warning=FALSE}
 suppressPackageStartupMessages({
@@ -101,7 +110,7 @@ nrti_dr_scores %>%
   select(Rule, ABC:AZT, FTC:TDF) %>% 
   gather(arv, score, 2:6) %>% 
   filter(!grepl(" ", Rule)) %>% 
-  mutate(effect = ifelse(score > 0, "resistance", "hyperSusept")) %>% 
+  mutate(effect = ifelse(score > 0, "resistance", "hyper-susceptible")) %>% 
   
   ggplot(aes(x = Rule, y = score, fill = effect)) +
   geom_col() +
@@ -115,118 +124,106 @@ We can see that 3TC and FTC has the exact same profiles and these are chemicaly 
 
 ---
 
-```{r 3TC and FTC, echo=FALSE, fig.cap="The chemical structures of 3TC and FTC. Available at http://aras.ab.ca/articles/HAART-Nukes-AIDS-Umber", out.extra='style="margin:50px 10px"', fig.align="center"}
+```{r 3TC and FTC, echo=FALSE, fig.cap="The chemical structures of 3TC (left) and FTC (right). Available at http://aras.ab.ca/articles/HAART-Nukes-AIDS-Umber", out.extra='style="margin:50px 10px"', fig.align="center"}
 knitr::include_graphics(file.path(static_path, "lamivu10.gif"))
 ```
 
 ---
 
 
-Also, note that some of the mutations increase susceptibility for AZT and TDF and this is indicated by a negative value for resistance.  This is called hypersusceptibility and is used by clinicians treating patients.
+Also, note that some of the mutations increase susceptibility for AZT and TDF and this is indicated by a negative value for resistance.  This is called **hyper-susceptibility** and is used by clinicians treating patients.
 
 
-Mutations are expressed as follow:
+Mutations are expressed using the notation `[WT AA][POS][Mutant AA]`, where:
+
+- WT denotes Wild type (the typical genotype)
+- AA denotes amino acid residue
+- POS denotes the position on the protein
+- Mutant means the changed genotype
 
 
-  * AA denotes amino acid residue
-  * WT denotes Wild type (the typical genotype)
-  * Mutant means the changed genotype
-  * POS denotes the position on the protein
+For example, the mutation **M184V** means that the wild type AA at position 184 is a methionine (M) and it has been mutated to valine (V).  Although this mutation makes the virus highly resistant to 3TC it has a crippling effect on viral replication, i.e. the virus can still replicate in the presence of 3TC, but slower.  This mutation also makes the virus hypersusceptible to AZT and TDF.  The way clinicians use this is to keep patients of 3TC in order to keep the selective pressure for M184V and use AZT or TDF as the other NRTI.  It is typical to have a patient on two NRTIs, which is sometimes referred to as the back bone and then one drug from another drug class to which the patient is fully susceptible.  Knowing the genotype of the virus allows us to infer the phenotype which in this case is the drug resistance profile.
 
 
-[WT AA][POS][Mutant AA]
+## PhyloPi: An affordable, purpose built phylogenetic pipeline for the HIV drug resistance testing facility
+
+The goal of HIV drug resistance genotyping is to determine on which drugs the patient will respond best and as mentioned earlier we use the viral sequence information for this.  Due to the rapid evolution of HIV, we can use this attribute in quality assurance.  **PCR** (polymerase chain reaction) is very sensitive to contamination, and if gross cross-contamination occurred during this process, the sequences of say two unrelated individuals might be very similar.  Also, the viral sequences of a patient over time will be more similar than the sequences between different people.
+
+Let's say we have genotyped a patient five years ago and we have a current genotype sequence.  It should be possible to retrieve the previous sequence from a database of sequences without relying on identifiers only or at all.  Sometimes when someone remarries they may change their surname or transcription errors can be made which makes finding previous samples tedious and error-prone.  So instead of using patient information to look for previous samples to include, we can rather use the sequence data itself and then confirm the sequences belong to the same patient or investigate any irregularities.  If we suspect mother to child transfer from our analysis, we confirm this with the health care worker who sent the sample.  
+
+Researchers recently published an automated pipeline for maintaining a sequence database, automatically retrieving the most similar sequences from previous genotyped viral isolates, calculating genetic distances and phylogenetic inference.  Let's look at each of these steps.
+
+Firstly, we cannot conduct phylogenetic analysis on all past and present sequences, this will be very computationally expensive and time-consuming and the result will be very difficult to interpret.  Rather we want to focus on the current batch of sequences the laboratory generated, but also the most similar sequences from previous batches stored in our rolling database:
+
+- We used a tool called [`BLAST`](https://blast.ncbi.nlm.nih.gov/Blast.cgi?CMD=Web&PAGE_TYPE=BlastDocs&DOC_TYPE=Download) (Basic Local Alignment Search Tool) for this.  This tool is used to add our new submissions to the current rolling database and then also retrieve the most similar previous sequences.
+- These sequences are aligned using [`MAFFT`](https://mafft.cbrc.jp/alignment/software/).
+- The resulting multiple sequence alignment is automatically curated with [`trimAl`](http://trimal.cgenomics.org/). 
+
+Finally, the sequences are ready for phylogenetic inference.
+
+- For this, we used [`FastTree`](http://www.microbesonline.org/fasttree/).  As its name implies, it is fast and capable of handling large datasets requiring minimal resources.
+- The resulting tree is rendered using the [`ETE3`](http://etetoolkit.org/) python API.
+- R is used to calculate a distance matrix from the multiple sequence alignment using the [ape](https://cran.r-project.org/web/packages/ape/index.html) library and [`plotly`](https://plot.ly/r/) for visualization.  
+
+In part 3 of this series we will talk more about the distance matrix calculation and how logistic regression was used to look at inter- and intra patient genetic distances of HIV sequences by mining a large public database.  This was important, the insights gained here were used to colour the distance matrix so that the user's attention is drawn to relevant samples.  
 
 
-Thus, the mutation M184V means that the wild type AA at position 184 is a methionine (M) and it has been mutated to valine (V).  Although this mutation makes the virus highly resistant to 3TC it has a crippling effect on viral replication, ie. the virus can still replicate in the presence of 3TC, but slower.  This mutation also makes the virus hypersusceptible to AZT and TDF.  The way clinicians use this is to keep patients of 3TC in order to keep the selective pressure for M184V and use AZT or TDF as the other NRTI.  It is typical to have a patient on two NRTIs, which is sometimes referred to as the back bone and then one drug from another drug class to which the patient is fully susceptible.  Knowing the genotype of the virus allows us to infer the phenotype which in this case is the drug resistance profile.
+This is an R for medicine blog post, but there is a lot of jargon in the paragraph above.  We can clear things up a bit, but please check out our [publication](https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0213241).
 
+## How does it work?
 
-### PhyloPi: An affordable, purpose built phylogenetic pipeline for the HIV drug resistance testing facility
-
-
-The goal of HIV drug resistance genotyping is to determine on which drugs the patient will respond best and as mentioned earlier we use the viral sequence information for this.  Due to the rapid evolution of HIV, we can use this attribute in quality assurance.  PCR (polymerase chain reaction) is very sensitive to contamination and if gross cross-contamination occurred during this process, the sequences of say two unrelated individuals might be very similar.  Also, the viral sequences of a patient over time will be more similar than the sequences between different people.  Let say we have genotyped a patient five years ago and we have a current genotype sequence it should be possible to retrieve the previous sequence from a database of sequences without relying on identifiers only or at all.  Sometimes when someone remarries they may change their surname or transcription errors can be made which makes finding previous samples tedious and error-prone.  So instead of using patient information to look for previous samples to include, we can rather use the sequence data itself and then confirm the sequences belong to the same patient or investigate any irregularities.  If we suspect mother to child transfer from our analysis, we confirm this with the health care worker who sent the sample.  
-
-
-Researchers recently published an automated pipeline for maintaining a sequence database, automatically retrieving the most similar sequences from previous genotyped viral isolates, calculating genetic distances and phylogenetic inference.  Let's look at each of these steps.  Firstly, we cannot conduct phylogenetic analysis on all past and present sequences, this will be very computationally expensive and time-consuming and the result will be very difficult to interpret.  Rather we want to focus on the current batch of sequences the laboratory generated, but also the most similar sequences from previous batches stored in our rolling database.  We used a tool called [`BLAST`](https://blast.ncbi.nlm.nih.gov/Blast.cgi?CMD=Web&PAGE_TYPE=BlastDocs&DOC_TYPE=Download) (Basic Local Alignment Search Tool) for this.  This tool is used to add our new submissions to the current rolling database and then also retrieve the most similar previous sequences.  These sequences are aligned using [`MAFFT`](https://mafft.cbrc.jp/alignment/software/).  The resulting multiple sequence alignment is automatically curated with [`trimAl`](http://trimal.cgenomics.org/).  Finally, the sequences are ready for phylogenetic inference.  For this, we used [`FastTree`](http://www.microbesonline.org/fasttree/).  As its name implies, it is fast and capable of handling large datasets requiring minimal resources.  The resulting tree is rendered using the [`ETE3`](http://etetoolkit.org/) python API.  R is used to calculate a distance matrix from the multiple sequence alignment using the [`ape`](https://cran.r-project.org/web/packages/ape/index.html) library and [`plotly`](https://plot.ly/r/) for visualization.  In an upcoming section, we will talk more about the distance matrix calculation and how logistic regression was used to look at inter- and intra patient genetic distances of HIV sequences by mining a large public database.  This was important, the insights gained here were used to colour the distance matrix so that the user's attention is drawn to relevant samples.  
-
-
-This is an R for medicine blog post, but there is a lot of jargon in the paragraph above.  We can clear thing up a bit, but please check out our [`publication`](https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0213241).
-
-
-Firstly, our DNA sequences are strings consisting of an alphabet: A, C, G, T.  Also, genetic distances are much like Levenshtein or Hamming distances or other edit distance algorithms.
+Firstly, our DNA sequences are strings consisting of an alphabet: A, C, G, and T.  Also, genetic distances are much like Levenshtein or Hamming distances or other edit distance algorithms.
 
 
 Consider the following strings, A, B and C
 
+### Raw strings
 
-  * A: peter kicked the ball realy far
-  * B: i think it was yesterday when peter kicked the ball realy far
-  * C: pieter kicked the round ball realy hard
-
-
-We can see that there are obvious similarities between these three sentances, but it would be much easier if they where aligned.
+  A: `peter kicked the ball realy far`
+  B: `i think it was yesterday when peter kicked the ball realy far`
+  C: `pieter kicked the round ball realy hard`
 
 
+We can see that there are obvious similarities between these three sentences, but it would be much easier if they where aligned.
 
-**Aligned strings**
+### Aligned strings
 
-```
+  A: `______________________________p eter kicked the _____ ball realy far`
+  B: `i think it was yesterday when p eter kicked the _____ ball realy far`
+  C: `______________________________pieter kicked the round ball realy hard`
 
-   A: ______________________________p eter kicked the _____ ball realy far
-   B: i think it was yesterday when p eter kicked the _____ ball realy far
-   C: ______________________________pieter kicked the round ball realy hard
-
-```
 
 By aligning the string it is much easier to calculate the similarities or differences.  Next, we remove the overhangs since it is possible that in reality strings A and C also had more text on the left-hand side, but it was not sampled.  Depending on your situation, we could also remove the internal 'gaps' like the word 'round'.  For our pipeline, insertions and deletions, like the letter 'i' in our example and the word 'round' are real features we would like to include.  We also have a substitution in C, where the 'f' in A and B was changed to an 'h'.
 
+### Curated strings
 
-                              
-**Curated strings**
+  A: `p eter kicked the _____ ball realy far`
+  B: `p eter kicked the _____ ball realy far`
+  C: `pieter kicked the round ball realy har`
 
-```
+### Calculation
 
-   A: p eter kicked the _____ ball realy far
-   B: p eter kicked the _____ ball realy far
-   C: pieter kicked the round ball realy har
-  
-```
+  A: `p eter kicked the _____ ball realy far`
+  B: `p eter kicked the _____ ball realy far`
+  M: `111111 111111 111 11111 1111 11111 111`
 
-
-                              
-**Calculation**
-
-```
-
-   A: p eter kicked the _____ ball realy far
-   B: p eter kicked the _____ ball realy far
-   M: 111111 111111 111 11111 1111 11111 111
-  
-```  
-  
 We can see for A and B we have matches for all of the features.  If we sum up all the ones, we get, 32, so the distance between them:
 
-
-$$ d = \frac{32 - 32}{32} = 0$$
+  $$ d = \frac{32 - 32}{32} = 0$$
        
-```  
-  
-   B: p eter kicked the _____ ball realy far
-   C: pieter kicked the round ball realy har
-   M: 101111 111111 111 00000 1111 11111 011
+   B: `p eter kicked the _____ ball realy far`
+   C: `pieter kicked the round ball realy har`
+   M: `101111 111111 111 00000 1111 11111 011`
 
-```
+  $$ d = \frac{32 - 25}{32} = 0.219$$
 
-
-$$ d = \frac{32 - 25}{32} = 0.219$$
-  
 
 After the multiple sequence alignment and curation, each sequence is compared to each in order to calculate a distance matrix.  This can then be used to create a phylogenetic tree, like a kind of dendrogram which can be calculated using hierarchical clustering.  The above is very simplified but should give enough background to understand the rest of the post.  The resource below is a good place to get started if you want to know more:
 
 
-[`EMBL-EBI Train Online`](https://www.ebi.ac.uk/training/online/course/introduction-phylogenetics/what-phylogenetics)
+[EMBL-EBI Train Online](https://www.ebi.ac.uk/training/online/course/introduction-phylogenetics/what-phylogenetics)
 
-
-### It's more than a toy.
+## The pipeline on a Raspberry Pi
 
 
 The [Raspberry Pi](https://www.raspberrypi.org/) is a small and cheap single board computer.  It is used amongst many hobbyists for all kinds of projects:
@@ -243,7 +240,11 @@ All the above mentioned are very important, but the Raspberry Pi has made its wa
 
 A group developed a cheap [instrument](https://pubs.rsc.org/en/content/articlehtml/2017/sc/c7sc03281a) to diagnose Ebola virus infection in the field.  Researchers can attach various sensors to the Raspberry Pi and use it for data collection.
 
-For our application, we needed to show that the Pi, can handle the problem we wanted it to solve and thus we did some benchmarking. We used the [Selenium WebDriver](https://www.seleniumhq.org/) to operate the pipeline as a human would, by actually browsing for an input file and submitting it through the button.  Time stamps were taken for each step and the number of blast hits that were included in the phylogenetic inference was also recorded.  For this exercise, we set the amount of the closest sequences to retrieve for each sample to 5, which means the submitted sample and 4 of the genetically closest samples.  However, it is possible that different submitted sequences have a retrieved a sequence in common, these will be included in the analysis only once. When we start analyzing this data we will see this.
+### Benchmarking
+
+For our application, we needed to show that the Pi can handle the problem we wanted it to solve and thus we did some benchmarking.
+
+We used the [Selenium WebDriver](https://www.seleniumhq.org/) to operate the pipeline as a human would, by actually browsing for an input file and submitting it through the button.  Time stamps were taken for each step and the number of blast hits that were included in the phylogenetic inference was also recorded.  For this exercise, we set the amount of the closest sequences to retrieve for each sample to 5, which means the submitted sample and 4 of the genetically closest samples.  However, it is possible that different submitted sequences have a retrieved a sequence in common, these will be included in the analysis only once. When we start analyzing this data we will see this.
 
 
 Read in the data.
@@ -367,12 +368,13 @@ tidy(fit) %>%
 
 Since, in multiple sequence alignment, each sequence is aligned with each other sequence, we would expect $O(N^2)$ time complexity.  We can see in our regression result that we are very close to what we expect.  And O a bit less than a sixth of a second.  Thus, if we would to analyse 16 sequences, we would retrieve $16 * 4.5 = 72$ and the multiple sequence alignment would take $0.153 * 72^{1.92} = 563$ seconds or 9 minutes, which is not bad.  Also consider that you can submit your samples and walk away.
 
+### Impact
 
 It is important to mention that PhyloPi is not used for tracking or detecting transmission clusters, but rather offers a way of automating phylogenetic analysis.  Some patients will be genotyped more than once and these sequences will cluster very closely on a phylogenetic tree.  This offers a spot check into the quality of the results.  Sometimes we find that the patient has two different first names, which they interchangeably use depending on the health care worker and patient language preference.  We have also detected sample swabs which otherwise would have gone unnoticed.  
 
 ## What next?
 
-In the next section, we will discuss how the inter- and intrapatient HIV genetic distances were analyzed by logistic regression to gain insights into the probability distribution of these two classes.  This is also where we asked Andrie from RStudio for help.  It was useful for us biologists and virologists to have someone not just to oversee analysis we did, but also to implement the correct analysis to get the job done.  Hope to see you in the next section.
+In part 3, we will discuss how the inter- and intrapatient HIV genetic distances were analyzed using logistic regression to gain insights into the probability distribution of these two classes.  This is also where we asked Andrie from RStudio for help.  It was useful for us biologists and virologists to have someone not just to oversee analysis we did, but also to implement the correct analysis to get the job done.  Hope to see you in the next section.
 
 
 
