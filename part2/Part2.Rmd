@@ -1,7 +1,7 @@
 ---
 title: 'Analysing the HIV pandemic, Part 2: Drug resistance testing'
 author: Armand Bester, Dominique Goedhals and Andrie de Vries
-date: '2019-05-08'
+date: '2019-05-07'
 slug: pipeline-for-analysing-hiv-part-2
 categories:
   - R Language
@@ -10,7 +10,7 @@ tags:
   - Medicine
   - R/Medicine
   - HIV/AIDS
-summary: "This is part 2 of a four-part series about the HIV endemic in Africa.  In a recent publication in PLoS ONE the authors described how they used affordable hardware to create a phylogenetic pipeline, tailored for the HIV drug resistance testing facility.  Part 2 discusses drug resistance testing of HIV isolates in sub-sahara Africa."
+summary: "This is part 2 of a four-part series about the HIV endemic in Africa.  In a recent publication in PLoS ONE the authors described how they used affordable hardware to create a phylogenetic pipeline, tailored for the HIV drug resistance testing facility.  Part 2 discusses drug resistance testing of HIV isolates in sub-Saharan Africa."
 ---
 
 ```{r setup, include=FALSE}
@@ -23,7 +23,6 @@ local({
     "tidyr",
     "ggplot2",
     "knitr",
-    "kableExtra",
     "broom"
   )
   
@@ -33,21 +32,19 @@ local({
   }
 })
 knitr::opts_chunk$set(echo = TRUE)
+
+static_path <- "/post/2019-05-07-analysis-hiv-pandemic-part-2_files"
+static_path <- "."
+file_path <- "."
+
 ```
 
+*Phillip (Armand) Bester is a medical scientist, researcher, and lecturer at the [Division of Virology](https://www.ufs.ac.za/health/departments-and-divisions/virology-home), [University of the Free State](https://www.ufs.ac.za), and [National Health Laboratory Service (NHLS)](http://www.nhls.ac.za/), Bloemfontein, South Africa*
 
-```{r load}
-suppressPackageStartupMessages({
-  library(dplyr)
-  library(readr)
-  library(stringr)
-  library(tidyr)
-  library(ggplot2)
-  library(knitr)
-  library(kableExtra)
-  library(broom)
-})
-```
+*Dominique Goedhals is ...*
+
+*Andrie de Vries is the author of "R for Dummies" and a Solutions Engineer at RStudio*
+
 
 
 
@@ -83,6 +80,19 @@ We have mentioned some classes of ARVs in the previous section of this series.  
 
 The plot below shows the resistance scores for five commonly used NRTIs.
 
+```{r load, warning=FALSE}
+suppressPackageStartupMessages({
+  library(dplyr)
+  library(readr)
+  library(stringr)
+  library(tidyr)
+  library(ggplot2)
+  library(knitr)
+  library(broom)
+})
+```
+
+
 
 ```{r, fig.height=8, fig.width=10}
 nrti_dr_scores <- read_tsv("ScoresNRTI_1555579653110.tsv", col_types = "cdcddddddd")
@@ -90,7 +100,7 @@ nrti_dr_scores <- read_tsv("ScoresNRTI_1555579653110.tsv", col_types = "cdcddddd
 nrti_dr_scores %>% 
   select(Rule, ABC:AZT, FTC:TDF) %>% 
   gather(arv, score, 2:6) %>% 
-  filter(!grepl(" ",Rule)) %>% 
+  filter(!grepl(" ", Rule)) %>% 
   mutate(effect = ifelse(score > 0, "resistance", "hyperSusept")) %>% 
   
   ggplot(aes(x = Rule, y = score, fill = effect)) +
@@ -98,7 +108,6 @@ nrti_dr_scores %>%
   coord_flip() +
   theme_bw() +
   facet_grid(. ~ arv)
-
 ```
 
 
@@ -107,7 +116,7 @@ We can see that 3TC and FTC has the exact same profiles and these are chemicaly 
 ---
 
 ```{r 3TC and FTC, echo=FALSE, fig.cap="The chemical structures of 3TC and FTC. Available at http://aras.ab.ca/articles/HAART-Nukes-AIDS-Umber", out.extra='style="margin:50px 10px"', fig.align="center"}
-knitr::include_graphics('lamivu10.gif') 
+knitr::include_graphics(file.path(static_path, "lamivu10.gif"))
 ```
 
 ---
@@ -239,7 +248,7 @@ For our application, we needed to show that the Pi, can handle the problem we wa
 
 Read in the data.
 
-```{r import}
+```{r import, results='asis'}
 # Read csv with time data
 time_dat <- read_csv(
   "timeFile.csv", 
@@ -248,24 +257,21 @@ time_dat <- read_csv(
 )
 
 head(time_dat) %>% 
-  kable(format = "html", caption = "First few lines of the benchmarking data.") %>% 
-  kable_styling(bootstrap_options = c("striped", "hover"))
+  kable(caption = "First few lines of the benchmarking data.")
 ```
 
 
 The 'Run' column shows some info regarding the benchmarking experiment, we know we asked for the 5 best hits to be included, the sequences were pseudo-randomly selected.  We started with 1 sequence for submission and then incremented this by 1 up to 50.  The above again shows how data is not always in the best format for working with.  We need to extract the digits at the end of the Run variable.  Previously we used the tidyr gather function to make wide data long.  This time we will use the spread function to make long data wide.
 
 
-```{r}
+```{r, results='asis'}
 time_dat <- time_dat %>% 
   mutate(nSubmitted = str_extract(Run, "\\d+$") %>% as.numeric) %>% 
   select(-Run ) %>% 
   spread(Description, Measure)
 
 head(time_dat) %>% 
-  kable(format = "html", caption = "First few lines of the benchmarking data after some cleaning.") %>% 
-  kable_styling(bootstrap_options = c("striped", "hover"))
-
+  kable(caption = "First few lines of the benchmarking data after some cleaning.")
 ```
 
 We now got rid of the useless data in the Run variable and extracted the useful information into nSubmitted variable.
@@ -294,15 +300,13 @@ time_dat %>%
   xlab("Number of sequences submitted") +
   ylab("Number of sequences retrieved using blastn") +
   annotate("text", x = 41, y = 72, label = "y == 4.628 * x", parse = TRUE) +
-  annotate("text", x = 40, y = 60, label = "R^2 == 0.998", parse = T)
+  annotate("text", x = 40, y = 60, label = "R^2 == 0.998", parse = TRUE)
+```
 
-
-fit <- lm(time_dat$blastHits ~ time_dat$nSubmitted - 1)
+```{r, results='asis'}
+fit <- lm(blastHits ~ nSubmitted - 1, data = time_dat)
 tidy(fit) %>% 
-  kable(format = "html", caption = "Regression analysis of the number of blast hits retrieved.") %>% 
-  kable_styling(bootstrap_options = c("striped", "hover"))
-
-
+  kable(caption = "Regression analysis of the number of blast hits retrieved.") 
 ```
 
 A linear line fits the data really well.  We mentioned that if different sequences retrieve the same sequence from the database, it is used only once.  The slope of this line will depend on the genetic diversity of the database.  A more diverse database will have a steeper slope, whereas a less diverse database will have a shallower slope.  Also, theoretically, at some point, the line will reach an asymptote as the number of requested sequences start to saturate the number of available sequences.  Practically, one would not have to submit more than 16 - 24 samples at a time, thus we are in the linear part of the rarefaction curve.  We can thus see from this, that for the Los Alamos data used in the analysis about 4.5 sequences get retrieved for every sequence submitted.  
@@ -314,58 +318,51 @@ A linear line fits the data really well.  We mentioned that if different sequenc
 time_dat %>%
   ggplot(aes(x = nSubmitted, y = blast)) +
   geom_smooth(method = lm, se = FALSE, colour = "black", formula = y ~ x, size = 0.25) +
-  geom_point() +
+  geom_point(colour = "blue") +
   theme_bw() +
   xlab("Number of input sequences") + ylab("Time in seconds (blastn)") +
-  annotate("text", x = 41, y = 90, label = "y == 11.0453 * x", parse = T) +
-  annotate("text", x = 40, y = 60, label = "R^2 == 0.9999", parse = T)
+  annotate("text", x = 41, y = 90, label = "y == 11.0453 * x", parse = TRUE) +
+  annotate("text", x = 40, y = 60, label = "R^2 == 0.9999", parse = TRUE)
+```
 
-
+```{r, results='asis'}
 fit <- lm(time_dat$blast ~ time_dat$nSubmitted)
-
 tidy(fit) %>% 
-  kable(format = "html", caption = "Regression analysis of blastn time vs. number of sequences.") %>% 
-  kable_styling(bootstrap_options = c("striped", "hover"))
-
+  kable(caption = "Regression analysis of blastn time vs. number of sequences.") 
 ```
 
 
 Again we see a linear relationship for blastn and the time it takes to complete.  For every sequence submitted it takes about 11 seconds to search a database of about 11 000 sequence entries.  We can say the blastn displays linear time complexity or O(n) time.  We did not discover anything new here. Remember, the purpose of this is to show off the Pi flexing its muscles.  You can read about the BLAST algorithm [here](https://www.ncbi.nlm.nih.gov/pubmed/2231712).  
 
 
-#### Multiple sequence alingment time *vs.* number of total sequences, submitted and retrieved
+#### Multiple sequence alignment time *vs.* number of total sequences, submitted and retrieved
 
 ```{r}
-
-t <- time_dat$mafftTime
-N <- time_dat$blastHits
-fit <- nls(t ~ b * N**a, start = list(a = 2, b = 0.1))
-
+fit <- nls(mafftTime ~ b * blastHits^a, 
+           start = list(a = 2, b = 0.1), 
+           data = time_dat)
 
 time_dat %>%
   ggplot(aes(x = blastHits, y = mafftTime)) +
-  geom_point(shape = 1) +
+  geom_point(colour = "blue") +
   geom_smooth(
     method = "nls",
-    formula = y ~ b * x**a,
+    formula = y ~ b * x^a,
+    se = FALSE, 
     method.args = list(start = c(a = 2, b = 0.1)),
-    se = FALSE, colour = "black", size = 0.25
+    colour = "black", size = 0.25
   ) +
-  annotate("text", x = 190, y = 1800, label = "y == 0.153 * x^1.92", parse = T) +
+  annotate("text", x = 190, y = 1800, label = "y == 0.153 * x^1.92", parse = TRUE) +
   theme_bw() +
-  xlab("Number of sequences in alingment") + 
+  xlab("Number of sequences in alignment") + 
   ylab("Time in seconds (MAFFT)")
-
-
-tidy(fit) %>% 
-  kable(format = "html", caption = "Regression analysis of multiple sequence alingment.") %>% 
-  kable_styling(bootstrap_options = c("striped", "hover"))
 ```
 
+```{r, results='asis'}
+tidy(fit) %>% 
+  kable(caption = "Regression analysis of multiple sequence alignment.")
+```
 
-To see how good our model fits the data we can use the cor function in R, cor(t, predict(fit)).  
-
-Which gives: **`r cor(t, predict(fit))`**
 
 
 Since, in multiple sequence alignment, each sequence is aligned with each other sequence, we would expect $O(N^2)$ time complexity.  We can see in our regression result that we are very close to what we expect.  And O a bit less than a sixth of a second.  Thus, if we would to analyse 16 sequences, we would retrieve $16 * 4.5 = 72$ and the multiple sequence alignment would take $0.153 * 72^{1.92} = 563$ seconds or 9 minutes, which is not bad.  Also consider that you can submit your samples and walk away.
@@ -373,10 +370,9 @@ Since, in multiple sequence alignment, each sequence is aligned with each other 
 
 It is important to mention that PhyloPi is not used for tracking or detecting transmission clusters, but rather offers a way of automating phylogenetic analysis.  Some patients will be genotyped more than once and these sequences will cluster very closely on a phylogenetic tree.  This offers a spot check into the quality of the results.  Sometimes we find that the patient has two different first names, which they interchangeably use depending on the health care worker and patient language preference.  We have also detected sample swabs which otherwise would have gone unnoticed.  
 
+## What next?
 
 In the next section, we will discuss how the inter- and intrapatient HIV genetic distances were analyzed by logistic regression to gain insights into the probability distribution of these two classes.  This is also where we asked Andrie from RStudio for help.  It was useful for us biologists and virologists to have someone not just to oversee analysis we did, but also to implement the correct analysis to get the job done.  Hope to see you in the next section.
-
-
 
 
 
