@@ -41,7 +41,7 @@ file_path <- "."
 
 *Phillip (Armand) Bester is a medical scientist, researcher, and lecturer at the [Division of Virology](https://www.ufs.ac.za/health/departments-and-divisions/virology-home), [University of the Free State](https://www.ufs.ac.za), and [National Health Laboratory Service (NHLS)](http://www.nhls.ac.za/), Bloemfontein, South Africa*
 
-*Dominique Goedhals is ...*
+*Dominique Goedhals is a pathologist, researcher, and lecturer at the [Division of Virology](https://www.ufs.ac.za/health/departments-and-divisions/virology-home), [University of the Free State](https://www.ufs.ac.za), and [National Health Laboratory Service (NHLS)](http://www.nhls.ac.za/), Bloemfontein, South Africa*
 
 *Andrie de Vries is the author of "R for Dummies" and a Solutions Engineer at RStudio*
 
