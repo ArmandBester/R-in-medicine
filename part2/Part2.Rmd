@@ -371,7 +371,15 @@ Since, in multiple sequence alignment, each sequence is aligned with each other 
 
 ### Impact
 
-It is important to mention that PhyloPi is not used for tracking or detecting transmission clusters, but rather offers a way of automating phylogenetic analysis.  Some patients will be genotyped more than once and these sequences will cluster very closely on a phylogenetic tree.  This offers a spot check into the quality of the results.  Sometimes we find that the patient has two different first names, which they interchangeably use depending on the health care worker and patient language preference.  We have also detected sample swabs which otherwise would have gone unnoticed.  
+We generate about 16 sequences every week or second week and PhyloPi is used on all data before it is released as a test result.  It is important to mention that PhyloPi is not used for tracking or detecting transmission clusters, but rather offers a way of automating phylogenetic analysis.  Some patients will be genotyped more than once and these sequences will cluster very closely on a phylogenetic tree.  This offers a spot check into the quality of the results.  Sometimes we find that the patient has two different first names, which they interchangeably use depending on the health care worker and patient language preference.  We have also detected sample swaps which otherwise would have gone unnoticed.  In one instance we could determine that the swap happened at the clinic.  We could communicate this to the clinician and the error was rectified.  If we did not have a system which could automatically detect most similar sequences from past analysis this would have gone unnoticed and an erroneous result would have been released to the clinician.  We have some patients with a long treatment history and have been exposed to many different ARVs.  We mentioned that HIV integrates its genome into the cells it infects and these proviral DNA can stay archived for many years and also archived resistance.  Thus if a patient was found to be resistant to an ARV we consider that resistance life long.  We might not pick up this resistance by sampling the circulating viral RNA, but when PhyloPi picks up a previous sample we can advise the treating clinician about the previous profile.  We also work closely with infectious disease specialist, physicians and paediatricians which we can use in difficult cases.
+
+
+If you would like to have a look at the pipeline, there is a demo available at 
+
+http://phylopi.hpc.ufs.ac.za/
+
+with some example inputs.
+
 
 ## What next?
 
