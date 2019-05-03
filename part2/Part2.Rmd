@@ -77,6 +77,7 @@ The reason why this is a numbers game is that the virus is mutating randomly and
 
 Mutations are expressed using the notation `[WT AA][POS][Mutant AA]`, where:
 
+
 - WT denotes Wild type (the typical genotype)
 - AA denotes amino acid residue
 - POS denotes the position on the protein
