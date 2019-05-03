@@ -163,7 +163,7 @@ Finally, the sequences are ready for phylogenetic inference.
 
 - For this, we used [`FastTree`](http://www.microbesonline.org/fasttree/).  As its name implies, it is fast and capable of handling large datasets requiring minimal resources.
 - The resulting tree is rendered using the [`ETE3`](http://etetoolkit.org/) python API.
-- R is used to calculate a distance matrix from the multiple sequence alignment using the [ape](https://cran.r-project.org/web/packages/ape/index.html) library and [`plotly`](https://plot.ly/r/) for visualization.  
+- R is used to calculate a distance matrix from the multiple sequence alignment using the [ape](https://cran.r-project.org/package=ape) library and [`plotly`](https://plot.ly/r/) for visualization.  
 
 In part 3 of this series we will talk more about the distance matrix calculation and how logistic regression was used to look at inter- and intra patient genetic distances of HIV sequences by mining a large public database.  This was important, the insights gained here were used to colour the distance matrix so that the user's attention is drawn to relevant samples.  
 
