@@ -23,7 +23,8 @@ local({
     "dplyr",
     "knitr",
     "plotly",
-    "RColorBrewer"
+    "RColorBrewer",
+    "diagram"
   )
   
   not_installed <- setdiff(pkgs, as.data.frame(installed.packages())$Package)
@@ -73,7 +74,7 @@ library(dplyr)
 library(knitr)
 library(plotly)
 library(RColorBrewer)
-
+library(diagram)
 ```
 
 ```{r}
@@ -121,7 +122,7 @@ The * means a stop codon was introduced.  Stop codons are responsible for termin
 In the previous seqtion we showed the general principle of a msa.  In biology sequence alingments are used to look at similarties of DNA or protein sequences.  For most phylogenetic analysis a mutliple sequence alingment is a requirement and the more  accurate the msa, the more accurate the phylogenetic inference.  There are different ways of displaying a msa.  Lets explore some of these options.
 
 
-Read in the multiple sequence alignment file
+Read in the multiple sequence alignment file.
 
 ```{r}
 # Read in the alignment file
@@ -129,15 +130,112 @@ aln <- read.dna('example.aln', format = 'fasta')
 ```
 
 
-Calculate the distance matrix using the Kimura 2-parameter (K80) model.
+Next we can calculate the distance matrix using the Kimura 2-parameter (K80) model.  There are various models which can be applied when looking at DNA substitution models, but first lets look at Marcov chains.
 
+
+```{r}
+tmA <- matrix(c(0.25,0.65,0.1,.25,0.25,.5,.35,.25,0.4),nrow = 3, byrow = TRUE)
+stateNames <- c("No Rain","Light Rain","Heavy Rain")
+row.names(tmA) <- stateNames; colnames(tmA) <- stateNames
+
+tmA %>% 
+  kable(
+    caption = "Probabilities of weather transitions"
+  )
+
+```
+
+
+This example is borrowed from [`RPubs`](https://rpubs.com/JanpuHou/326048), thank you [`Janpu Hou`](https://rpubs.com/JanpuHou) for a very clean and clearly explained blog post on the subject.
+
+Next, we can plot our probabilities from above.
+
+
+```{r}
+plotmat(tmA,pos = c(1,2), 
+        lwd = 1, box.lwd = 2, 
+        cex.txt = 0.8, 
+        box.size = 0.1, 
+        box.type = "circle", 
+        box.prop = 0.5,
+        box.col = "light blue",
+        arr.length=.1,
+        arr.width=.1,
+        self.cex = .6,
+        self.shifty = -.01,
+        self.shiftx = .14,
+        main = "Markov Chain")
+```
+
+
+As you can see from the table and the diagram above, we have three states (nodes) in our example and the probability of transition or staying in a stage is indicated by the edges (lines).
+
+
+A big part of a scientist's job is to observe nature and then try to apply a model to the observation.  Think of Issac Newton and Albert Einstein, both of them had a very good model for gravity.  Arguably, Newton's model is easier to implement when you want to calculate a trajectory for launching a rocket and Einsteins model can explain why black holes bent light.  It is time for a quote:
+
+"All models are wrong, but some are useful" - [`George Box`](https://en.wikipedia.org/wiki/George_E._P._Box)
+
+
+This is **very** true when it comes to estimating genetic distances and phylogentic inference.  Consider the image below.
+
+```{r sumbstetutions, echo=FALSE, fig.cap="transversions vs transitions. Available at https://upload.wikimedia.org/wikipedia/commons/thumb/8/8a/All_transitions_and_transversions.svg/1024px-All_transitions_and_transversions.svg.png", out.extra='style="margin:50px 10px"', fig.align="center"}
+knitr::include_graphics(file.path(static_path, "1024px-All_transitions_and_transversions.svg.png"))
+```
+
+
+
+The figure above shows transition and transversion events.  Transition between A and G (the purines) and C and T (the pyrimidines) are more likely than transversions indicated by the red arrows.  The K80 model takes this into account as one of its parameters and these rates or probabilities are calculated or estimated by maximum likelihood.
+
+
+Lets see what that looks like.
+
+```{r}
+tmDNA <- matrix(c(0.8,0.05,0.1,0.05,
+                  0.05,0.8,0.05,0.1,
+                  0.1,0.05,0.8,0.05,
+                  0.05,0.1,0.05,0.8),
+                nrow = 4, byrow = TRUE)
+stateNames <- c("A","C","G", "T")
+row.names(tmDNA) <- stateNames; colnames(tmDNA) <- stateNames
+
+tmDNA %>% 
+  kable(
+    caption = "Example K80 probabilities of transitions or transversions"
+  )
+
+```
+
+
+```{r}
+plotmat(tmDNA,pos = c(2,2), 
+        lwd = 1, box.lwd = 2, 
+        cex.txt = 0.8, 
+        box.size = 0.1, 
+        box.type = "circle", 
+        box.prop = 0.5,
+        box.col = "light blue",
+        arr.length=.1,
+        arr.width=.1,
+        self.cex = .6,
+        self.shifty = -.01,
+        self.shiftx = .14,
+        main = "Markov Chain")
+```
+
+
+The example above is a made up one but should explain the concept of a substitutions model.  The viral reverse transcriptase is not a random sequence generator, but it does make mistakes.  Most of the time when it is copying the RNA into DNA the base (state) stays the same.  Then also the probability of a transversion *vs* a transition is different.  If you look at the figure above where we introduced transversion and transition you will notice, that A is more similar to G and T is more similar t C in its chemical structure.
+
+
+We can use the ape package and do the distance calculations using the K80 model.
 
 ```{r}
 # Calculate the genetic distances between sequences using the K80 model, as.mattrix makes the rest easier
 alnDist <- dist.dna(aln, model = "K80", as.matrix = TRUE)
+alnDist[1:5, 1:5] %>% 
+  kable(caption = "First few rows of our distance matrix")
 ```
 
-
+The matirx has a shape of 47 by 47, we just preview the first 5 rows and columns.
 
 
 ### Reduction of the heatmap to focus on the important data
