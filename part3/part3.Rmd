@@ -52,7 +52,7 @@ In part 2 of this series, we discussed the [`PhyloPi`](https://journals.plos.org
 
 
 
-[`Cuevas`](https://journals.plos.org/plosbiology/article?id=10.1371/journal.pbio.1002251) *et al.* (2015) published work on the *in vivo* rate of HIV evolution.  Their analysis revealed the highest mutation rate of any biological entity of $4.1 \cdot 10^{-3} (sd=1.7 \cdot 10^{-3})$.  However, the error-prone reverse transcriptase is not the only mechanism of mutation.  One defence against HIV infection is an enzyme called apolipoprotein B mRNA editing enzyme, catalytic polypeptide-like or [`APOBEC`](https://en.wikipedia.org/wiki/APOBEC3G).  These enzymes act on RNA and converts or mutate cytidine to uridine (uridine in RNA is the thymadine couterpart in DNA).  This results in a G to A mutations the the cDNA.
+[`Cuevas`](https://journals.plos.org/plosbiology/article?id=10.1371/journal.pbio.1002251) *et al.* (2015) published work on the *in vivo* rate of HIV evolution.  Their analysis revealed the highest mutation rate of any biological entity of $4.1 \cdot 10^{-3} (sd=1.7 \cdot 10^{-3})$.  However, the error-prone reverse transcriptase is not the only mechanism of mutation.  One defence against HIV infection is an enzyme called apolipoprotein B mRNA editing enzyme, catalytic polypeptide-like or [`APOBEC`](https://en.wikipedia.org/wiki/APOBEC3G).  These enzymes act on RNA and converts or mutates cytidine to uridine (uridine in RNA is the thymadine couterpart in DNA).  This results in a G to A mutations the the cDNA.
 
 
 Also, shown by Cuevas *et al*, these enzymes are not equally active in all people. On the other hand, the viral Vif protein inhibits this hypermutation by 'tagging' the APOBEC protein with ubiquinone for degradation by the cytoplasmic ubiquitin-dependent proteasome machinery.
@@ -148,6 +148,9 @@ aln <- read.dna('example.aln', format = 'fasta')
 
 
 Next we can calculate the distance matrix using the Kimura 2-parameter (K80) model.  There are various models which can be applied when looking at DNA substitution models, but first lets look at Marcov chains.
+
+
+Below we have a table showing the probability of changing from one weather state to another depending on the current state.
 
 
 ```{r}
