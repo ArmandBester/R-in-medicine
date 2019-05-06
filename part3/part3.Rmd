@@ -18,6 +18,7 @@ summary: " "
 local({
   pkgs <- c(
     "ape",
+    "Biostrings",
     "tibble",
     "tidyr",
     "dplyr",
@@ -49,9 +50,16 @@ file_path <- "."
 
 In part 2 of this series, we discussed the [`PhyloPi`](https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0213241) pipeline for conducting routine HIV phylogenetics in the drug resistance testing laboratory as a part of quality control.  As mentioned, during HIV replication the error-prone viral reverse transcriptase (RT) converts its RNA genome into DNA before it can be integrated into the host cell genome.  During this conversion, the enzyme makes random mistakes in the copying process.  These mistakes or mutations can be deleterious, beneficial or may have no measurable impact on the replicative fitness of the virus.  This fast rate of mutation provides enough divergence to be useful for phylogenetic analysis.  As we will see in the 4th part of this series, the intrapatient divergence is smaller than the interpatient divergence.  As infections spread from person to person the virus will continue to mutate and become more and more divergent.  This allows us to use the genetic information we obtain while doing the drug resistance test and analyse the sequences for abnormalities.
 
-[`Cuevas`](https://journals.plos.org/plosbiology/article?id=10.1371/journal.pbio.1002251) *et al.* (2015) published work on the *in vivo* rate of HIV evolution.  Their analysis revealed the highest mutation rate of any biological entity of $4.1 \cdot 10^{-3} (sd=1.7 \cdot 10^{-3})$.  However, error-prone RT is not the only mechanism of mutation.  One defence against HIV infection is an enzyme called apolipoprotein B mRNA editing enzyme, catalytic polypeptide-like or [`APOBEC`](https://en.wikipedia.org/wiki/APOBEC3G).  As the name suggests these are enzymes which act on RNA and converts or mutates cytidine to uridine.  In other words C to U which is the impact on RNA or C to T with DNA.  The letter U in RNA is synonymous to T in DNA.  Also, shown by Cuevas *et al*, these enzymes are not equally active in all people. 
 
-So how does this affect the virus in a negative way?
+
+[`Cuevas`](https://journals.plos.org/plosbiology/article?id=10.1371/journal.pbio.1002251) *et al.* (2015) published work on the *in vivo* rate of HIV evolution.  Their analysis revealed the highest mutation rate of any biological entity of $4.1 \cdot 10^{-3} (sd=1.7 \cdot 10^{-3})$.  However, the error-prone reverse transcriptase is not the only mechanism of mutation.  One defence against HIV infection is an enzyme called apolipoprotein B mRNA editing enzyme, catalytic polypeptide-like or [`APOBEC`](https://en.wikipedia.org/wiki/APOBEC3G).  These enzymes act on RNA and converts or mutate cytidine to uridine (uridine in RNA is the thymadine couterpart in DNA).  This results in a G to A mutations the the cDNA.
+
+
+Also, shown by Cuevas *et al*, these enzymes are not equally active in all people. On the other hand, the viral Vif protein inhibits this hypermutation by 'tagging' the APOBEC protein with ubiquinone for degradation by the cytoplasmic ubiquitin-dependent proteasome machinery.
+
+
+But how does this hypermutation affect the virus in a negative way?
+
 
 We first need to understand how RNA is translated into proteins.  Below is a table showing the codon combinations for each of the 20 amino acids.
 
@@ -60,7 +68,11 @@ We first need to understand how RNA is translated into proteins.  Below is a tab
 knitr::include_graphics(file.path(static_path, "codon-table-by-sabal-edu.jpg"))
 ```
 
-As can be seen from the table above, some amino acids are encoded by more than one codon.  For example, if we change the codon, CGU to AGA the resulting amino acid stays Arginine or R.  This is referred to as a silent mutation since the resulting protein will look the same.  On the other hand, if we mutate AGU to CGU the resulting mutation is from Serine to Arginine or in single letter notation, **S to R**.  A change in the amino acid is referred to as a non-synonymous mutation.  In reality, the APOBEC enzyme recognizes specific RNA sequence motifs, but just to give an idea of how this works, let's look at an example.
+
+As can be seen from the table above, some amino acids are encoded by more than one codon.  For example, if we change the codon, CGU to AGA the resulting amino acid stays Arginine or R.  This is referred to as a silent mutation since the resulting protein will look the same.  On the other hand, if we mutate AGU to CGU the resulting mutation is from Serine to Arginine or in single letter notation, **S to R**.  A change in the amino acid is referred to as a non-synonymous mutation.
+
+
+In reality, the APOBEC enzyme recognizes specific RNA sequence motifs, but just to give an idea of how this works, let's look at an example.
 
 
 Load some packages
@@ -68,6 +80,7 @@ Load some packages
 ```{r init, warning=FALSE, message=FALSE}
 
 library(ape)
+library(Biostrings)
 library(tibble)
 library(tidyr)
 library(dplyr)
@@ -77,16 +90,20 @@ library(RColorBrewer)
 library(diagram)
 ```
 
+Create a RNA sequence, remeber U is T in RNA langauge.
+
 ```{r}
 WT <- c("CGA", "GUU", "AUA", "GAG", "UGG", "AGU")
 
 ```
 
+
 We have the sequence `r paste0(WT, collapse = "")` which we created in the cell block above as codons for clarity.  We can now translate this sequence using the codon table or some function.
 
 
 ```{r}
-AA <- trans(as.DNAbin.DNAString(gsub("U", x = paste0(WT, collapse = ""), replacement = "T" )))
+
+AA <- trans(as.DNAbin(DNAString(gsub("U", x = paste0(WT, collapse = ""), replacement = "T" ))))
 
 AA <- as.character.AAbin(AA)[[1]]
 ```
@@ -101,25 +118,25 @@ Now let's mutate all occurrences of C to U/T
 MUT <- gsub("C", "U", WT)
 ```
 
-The resulting mutant sequence is: `r MUT`  and if we now translate that we get
+The resulting mutant sequence is: `r MUT`  and if we now translate that we get ...
 
 
 ```{r}
-AA <- trans(as.DNAbin.DNAString(gsub("U", x = paste0(MUT, collapse = ""), replacement = "T" )))
+AA <- trans(as.DNAbin(DNAString(gsub("U", x = paste0(MUT, collapse = ""), replacement = "T" ))))
 
 AA <- as.character.AAbin(AA)[[1]]
 ```
 
 
-the protein sequence: `r AA`.
+... the protein sequence: `r AA`.
 
-The * means a stop codon was introduced.  Stop codons are responsible for terminating translation from RNA to protein.  If one of the viral genes has a stop codon in it the protein will truncate will be dysfunctional.  
 
+The * means a stop codon was introduced.  Stop codons are responsible for terminating translation from RNA to protein.  If one of the viral genes has a stop codon in it the protein will truncate prematurely and the protein will most likely be dysfunctional.  Mutations other than stop codons could also have a negative effect on the virus or it can cause resistance to an ARV.
 
 
 ## Calculating genetic distances from a multiple sequence alingment (msa)
 
-In the previous seqtion we showed the general principle of a msa.  In biology sequence alingments are used to look at similarties of DNA or protein sequences.  For most phylogenetic analysis a mutliple sequence alingment is a requirement and the more  accurate the msa, the more accurate the phylogenetic inference.  There are different ways of displaying a msa.  Lets explore some of these options.
+In the previous seqtion we showed the general principle of a msa.  In biology sequence alingments are used to look at similarties of DNA or protein sequences.  For most phylogenetic analysis a mutliple sequence alingment is a requirement and the more  accurate the msa, the more accurate the phylogenetic inference.  
 
 
 Read in the multiple sequence alignment file.
@@ -173,6 +190,7 @@ As you can see from the table and the diagram above, we have three states (nodes
 
 A big part of a scientist's job is to observe nature and then try to apply a model to the observation.  Think of Issac Newton and Albert Einstein, both of them had a very good model for gravity.  Arguably, Newton's model is easier to implement when you want to calculate a trajectory for launching a rocket and Einsteins model can explain why black holes bent light.  It is time for a quote:
 
+
 "All models are wrong, but some are useful" - [`George Box`](https://en.wikipedia.org/wiki/George_E._P._Box)
 
 
@@ -184,7 +202,7 @@ knitr::include_graphics(file.path(static_path, "1024px-All_transitions_and_trans
 
 
 
-The figure above shows transition and transversion events.  Transition between A and G (the purines) and C and T (the pyrimidines) are more likely than transversions indicated by the red arrows.  The K80 model takes this into account as one of its parameters and these rates or probabilities are calculated or estimated by maximum likelihood.
+The figure above shows transition and transversion events.  Transition between A and G (the purines) and C and T (the pyrimidines) are more likely than transversions indicated by the red arrows.  The K80 model takes this into account as one of its parameters and these rates or probabilities are calculated or estimated by maximum likelihood. 
 
 
 Lets see what that looks like.
@@ -226,7 +244,11 @@ plotmat(tmDNA,pos = c(2,2),
 The example above is a made up one but should explain the concept of a substitutions model.  The viral reverse transcriptase is not a random sequence generator, but it does make mistakes.  Most of the time when it is copying the RNA into DNA the base (state) stays the same.  Then also the probability of a transversion *vs* a transition is different.  If you look at the figure above where we introduced transversion and transition you will notice, that A is more similar to G and T is more similar t C in its chemical structure.
 
 
+There are many other substitution models, take a look at http://www.iqtree.org/doc/Substitution-Models.  It is not always trivial to select the best model for phylogenetic inference.  One technique is to run multiple maximum likelihood phylogenetic calculations using different models and then pick the model with the lowest AIC (Akaike Information Criterion).  For our pipeline, we selected the rather simple K80 model.  Since we are looking at different sets of sequences at each submission, a simple model is probably better in order to avoid the problems caused by overfitting.
+
+
 We can use the ape package and do the distance calculations using the K80 model.
+
 
 ```{r}
 # Calculate the genetic distances between sequences using the K80 model, as.mattrix makes the rest easier
