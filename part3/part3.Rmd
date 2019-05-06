@@ -64,7 +64,7 @@ But how does this hypermutation affect the virus in a negative way?
 We first need to understand how RNA is translated into proteins.  Below is a table showing the codon combinations for each of the 20 amino acids.
 
 
-```{r codons, echo=FALSE, fig.cap="Amino acid encoding. Available at https://www.biologyjunction.com/protein-synthesis-worksheet/", out.extra='style="margin:50px 10px"', fig.align="center"}
+```{r codons, echo=FALSE, fig.cap="Amino acid encoding. Available at https://www.biologyjunction.com/protein-synthesis-worksheet/", out.extra='style="margin:50px 10px"', fig.align="center", out.width = '80%'}
 knitr::include_graphics(file.path(static_path, "codon-table-by-sabal-edu.jpg"))
 ```
 
@@ -273,7 +273,7 @@ The data we have is ready to use for heatmap plotting purposes, but since the da
 
 ---
 
-```{r distracting data, echo=FALSE, fig.cap="A diagram of a heatmap with lots of redundant and distracting data. ", out.extra='style="margin:50px 10px"', fig.align="center"}
+```{r distracting data, echo=FALSE, fig.cap="A diagram of a heatmap with lots of redundant and distracting data. ", out.extra='style="margin:50px 10px"', fig.align="center", out.width = '50%'}
 knitr::include_graphics(file.path(static_path, "heatmap_full.png"))
 ```
 
@@ -285,7 +285,7 @@ From the image above you can see that, typical of a heatmap, it is symmetrical o
 
 ---
 
-```{r focussed data, echo=FALSE, fig.cap="A diagram of a more focussed heatmap with the redundant and distracting data removed.", out.extra='style="margin:50px 10px"', fig.align="center"}
+```{r focussed data, echo=FALSE, fig.cap="A diagram of a more focussed heatmap with the redundant and distracting data removed.", out.extra='style="margin:50px 10px"', fig.align="center", out.width = '50%'}
 knitr::include_graphics(file.path(static_path, "heatmap_focused.png"))
 ```
 
