@@ -292,7 +292,7 @@ knitr::include_graphics(file.path(static_path, "heatmap_focused.png"))
 ---
 
 
-Luckily for us, we have a very powerful tool at our disposal, **R**, and plenty of really useful and convenient packages, like `dplyr`.
+Luckily for us, we have a very powerful tool at our disposal, **R**, and plenty of really useful and convenient packages to fix this, like `dplyr`.
 
 
 ```{r gather}
@@ -380,6 +380,9 @@ We have highlighted a node with a red block, with the text "This one" which we c
 In this paper, the authors looked and selection bias when the infection is transmitted.  They found that in a pool of viral quasispecies transmission is biased to benefit the fittest viral quasispecies.  The node highlighted above shows the kind of clustering one would expect with a study like the one mentioned above.  You will also notice plenty of other nodes which you can explore using the accession number and searching for it at https://www.hiv.lanl.gov/components/sequence/HIV/search/search.html
 
 
+The tree above is much like a dendrogram used when displaying algoromative or hierarchical clustering.  The numbers on the tree above show the probability that the corresponding clusters are correct.  The branch lengths indicate the distances between samples.  This in conjunction with a properly coloured heatmap is very useful for finding relevant clusters to investigate.  If the reason for close clustering cannot be explained, the tests are repeated.  
+
+In the fourth and final part of this series, we will show how we analysed the inter- and intrapatient genetic distances of HIV sequences by logistic regression.  This was useful in properly colouring our heatmap explained in this series.  See you there!
 
 
 
