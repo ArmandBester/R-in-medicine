@@ -16,9 +16,10 @@ summary: " "
 ```{r setup, include=FALSE}
 # packages required for this post
 local({
+  # CRAN
   pkgs <- c(
+    "BiocManager",
     "ape",
-    "Biostrings",
     "tibble",
     "tidyr",
     "dplyr",
@@ -32,6 +33,17 @@ local({
   if (length(not_installed)) {
     install.packages(not_installed)
   }
+  
+  # BioConductor
+  pkgs <- c(
+      "Biostrings"
+  )
+  not_installed <- setdiff(pkgs, as.data.frame(installed.packages())$Package)
+  if (length(not_installed)) {
+    BiocManager::install(not_installed, ask = FALSE)
+  }
+
+  
 })
 knitr::opts_chunk$set(echo = TRUE)
 
