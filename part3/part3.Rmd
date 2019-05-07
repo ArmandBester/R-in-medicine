@@ -244,7 +244,7 @@ plotmat(tmDNA,pos = c(2,2),
 ```
 
 
-The example above is a made up one but should explain the concept of a substitutions model.  The viral reverse transcriptase is not a random sequence generator, but it does make mistakes.  Most of the time when it is copying the RNA into DNA the base (state) stays the same.  Then also the probability of a transversion *vs* a transition is different.  If you look at the figure above where we introduced transversion and transition you will notice, that A is more similar to G and T is more similar t C in its chemical structure.
+The example above is a made up one but should explain the concept of a substitutions model.  The viral reverse transcriptase is not a random sequence generator, but it does make mistakes.  Most of the time when it is copying the RNA into DNA the base (state) stays the same.  Then also the probability of a transversion *vs* a transition is different.  If you look at the figure above where we introduced transversion and transition you will notice, that A is more similar to G and T is more similar to C in its chemical structure.
 
 
 There are many other substitution models, take a look at http://www.iqtree.org/doc/Substitution-Models.  It is not always trivial to select the best model for phylogenetic inference.  One technique is to run multiple maximum likelihood phylogenetic calculations using different models and then pick the model with the lowest AIC (Akaike Information Criterion).  For our pipeline, we selected the rather simple K80 model.  Since we are looking at different sets of sequences at each submission, a simple model is probably better in order to avoid the problems caused by overfitting.
