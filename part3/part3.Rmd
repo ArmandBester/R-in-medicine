@@ -28,12 +28,12 @@ local({
     "RColorBrewer",
     "diagram"
   )
-  
+
   not_installed <- setdiff(pkgs, as.data.frame(installed.packages())$Package)
   if (length(not_installed)) {
     install.packages(not_installed)
   }
-  
+
   # BioConductor
   pkgs <- c(
       "Biostrings"
@@ -43,7 +43,7 @@ local({
     BiocManager::install(not_installed, ask = FALSE)
   }
 
-  
+
 })
 knitr::opts_chunk$set(echo = TRUE)
 
@@ -393,6 +393,8 @@ In this paper, the authors looked and selection bias when the infection is trans
 
 
 The tree above is much like a dendrogram used when displaying algoromative or hierarchical clustering.  The numbers on the tree above show the probability that the corresponding clusters are correct.  The branch lengths indicate the distances between samples.  This in conjunction with a properly coloured heatmap is very useful for finding relevant clusters to investigate.  If the reason for close clustering cannot be explained, the tests are repeated.  
+
+The R markdown document and all the data needed to replicate these blog posts can be found at https://github.com/ArmandBester/R-in-medicine.
 
 In the fourth and final part of this series, we will show how we analysed the inter- and intrapatient genetic distances of HIV sequences by logistic regression.  This was useful in properly colouring our heatmap explained in this series.  See you there!
 
