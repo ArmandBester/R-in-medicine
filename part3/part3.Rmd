@@ -10,7 +10,7 @@ tags:
   - Medicine
   - R/Medicine
   - HIV/AIDS
-summary: " "
+summary: "This is part 3 of a four-part series about the HIV epidemic in Africa. In a recent publication in PLoS ONE, the authors described how they used affordable hardware to create a phylogenetic pipeline, tailored for the HIV drug-resistance testing facility. In this part, we discuss genetic diversity and how this can be analysed using markov chains and heatmaps."
 ---
 
 ```{r setup, include=FALSE}
@@ -47,7 +47,7 @@ local({
 })
 knitr::opts_chunk$set(echo = TRUE)
 
-static_path <- "/post/2019-05-014-analysis-hiv-pandemic-part-3_files"
+static_path <- "/post/2019-05-14-analysis-hiv-pandemic-part-3_files"
 static_path <- "."
 file_path <- "."
 
@@ -60,11 +60,11 @@ file_path <- "."
 
 ## Introduction
 
-In part 2 of this series, we discussed the [`PhyloPi`](https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0213241) pipeline for conducting routine HIV phylogenetics in the drug resistance testing laboratory as a part of quality control.  As mentioned, during HIV replication the error-prone viral reverse transcriptase (RT) converts its RNA genome into DNA before it can be integrated into the host cell genome.  During this conversion, the enzyme makes random mistakes in the copying process.  These mistakes or mutations can be deleterious, beneficial or may have no measurable impact on the replicative fitness of the virus.  This fast rate of mutation provides enough divergence to be useful for phylogenetic analysis.  As we will see in the 4th part of this series, the intrapatient divergence is smaller than the interpatient divergence.  As infections spread from person to person the virus will continue to mutate and become more and more divergent.  This allows us to use the genetic information we obtain while doing the drug resistance test and analyse the sequences for abnormalities.
+In [part 2 of this series](https://rviews.rstudio.com/2019/05/07/pipeline-for-analysing-hiv-part-2/) we discussed the [PhyloPi](https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0213241) pipeline for conducting routine HIV phylogenetics in the drug resistance testing laboratory as a part of quality control.  As mentioned, during HIV replication the error-prone viral reverse transcriptase (RT) converts its RNA genome into DNA before it can be integrated into the host cell genome.  During this conversion, the enzyme makes random mistakes in the copying process.  These mistakes or mutations can be deleterious, beneficial or may have no measurable impact on the replicative fitness of the virus.
 
+This fast rate of mutation provides enough divergence to be useful for phylogenetic analysis.  As we will see in the 4th part of this series, the intra-patient divergence is smaller than the inter-patient divergence.  As infections spread from person to person, the virus continues to mutate and become more and more divergent.  This allows us to use the genetic information we obtain while doing the drug resistance test and analyse the sequences for abnormalities.
 
-
-[`Cuevas`](https://journals.plos.org/plosbiology/article?id=10.1371/journal.pbio.1002251) *et al.* (2015) published work on the *in vivo* rate of HIV evolution.  Their analysis revealed the highest mutation rate of any biological entity of $4.1 \cdot 10^{-3} (sd=1.7 \cdot 10^{-3})$.  However, the error-prone reverse transcriptase is not the only mechanism of mutation.  One defence against HIV infection is an enzyme called apolipoprotein B mRNA editing enzyme, catalytic polypeptide-like or [`APOBEC`](https://en.wikipedia.org/wiki/APOBEC3G).  These enzymes act on RNA and converts or mutates cytidine to uridine (uridine in RNA is the thymadine couterpart in DNA).  This results in a G to A mutations the the cDNA.
+[Cuevas](https://journals.plos.org/plosbiology/article?id=10.1371/journal.pbio.1002251) *et al.* (2015) published work on the *in vivo* rate of HIV evolution.  Their analysis revealed the highest mutation rate of any biological entity of $4.1 \cdot 10^{-3} (sd=1.7 \cdot 10^{-3})$.  However, the error-prone reverse transcriptase is not the only mechanism of mutation.  One defence against HIV infection is an enzyme called apolipoprotein B mRNA editing enzyme, catalytic polypeptide-like or [APOBEC](https://en.wikipedia.org/wiki/APOBEC3G).  These enzymes act on RNA and converts or mutates cytidine to uridine (uridine in RNA is the thymadine couterpart in DNA).  This results in a G to A mutations the the cDNA.
 
 
 Also, shown by Cuevas *et al*, these enzymes are not equally active in all people. On the other hand, the viral Vif protein inhibits this hypermutation by 'tagging' the APOBEC protein with ubiquinone for degradation by the cytoplasmic ubiquitin-dependent proteasome machinery.
@@ -83,14 +83,14 @@ knitr::include_graphics(file.path(static_path, "codon-table-by-sabal-edu.jpg"))
 
 As can be seen from the table above, some amino acids are encoded by more than one codon.  For example, if we change the codon, CGU to AGA the resulting amino acid stays Arginine or R.  This is referred to as a silent mutation since the resulting protein will look the same.  On the other hand, if we mutate AGU to CGU the resulting mutation is from Serine to Arginine or in single letter notation, **S to R**.  A change in the amino acid is referred to as a non-synonymous mutation.
 
+## Example
 
 In reality, the APOBEC enzyme recognizes specific RNA sequence motifs, but just to give an idea of how this works, let's look at an example.
 
 
-Load some packages
+Load some packages:
 
 ```{r init, warning=FALSE, message=FALSE}
-
 library(ape)
 library(Biostrings)
 library(tibble)
@@ -102,11 +102,10 @@ library(RColorBrewer)
 library(diagram)
 ```
 
-Create a RNA sequence, remeber U is T in RNA langauge.
+Create a RNA sequence (remember `U` is `T` in RNA language):
 
 ```{r}
 WT <- c("CGA", "GUU", "AUA", "GAG", "UGG", "AGU")
-
 ```
 
 
@@ -114,16 +113,24 @@ We have the sequence `r paste0(WT, collapse = "")` which we created in the cell 
 
 
 ```{r}
+translate_dna_sequence <- function(x){
+  x %>% 
+    paste0(collapse = "") %>% 
+    gsub("U", "T", .) %>% 
+    DNAString() %>% 
+    as.DNAbin() %>% 
+    trans() %>% 
+    .[[1]] %>% 
+    as.character.AAbin()
+}
 
-AA <- trans(as.DNAbin(DNAString(gsub("U", x = paste0(WT, collapse = ""), replacement = "T" ))))
-
-AA <- as.character.AAbin(AA)[[1]]
+AA <- WT %>% translate_dna_sequence()
 ```
 
 
 The code block above translated our RNA sequence into a protein sequence: `r AA`
 
-Now let's mutate all occurrences of C to U/T
+Now let's mutate all occurrences of `C` to `U/T`
 
 
 ```{r}
@@ -134,21 +141,19 @@ The resulting mutant sequence is: `r MUT`  and if we now translate that we get .
 
 
 ```{r}
-AA <- trans(as.DNAbin(DNAString(gsub("U", x = paste0(MUT, collapse = ""), replacement = "T" ))))
-
-AA <- as.character.AAbin(AA)[[1]]
+AA <- MUT %>% translate_dna_sequence()
 ```
 
 
 ... the protein sequence: `r AA`.
 
 
-The * means a stop codon was introduced.  Stop codons are responsible for terminating translation from RNA to protein.  If one of the viral genes has a stop codon in it the protein will truncate prematurely and the protein will most likely be dysfunctional.  Mutations other than stop codons could also have a negative effect on the virus or it can cause resistance to an ARV.
+The `*` means a *stop codon* was introduced.  Stop codons are responsible for terminating translation from RNA to protein.  If one of the viral genes has a stop codon in it the protein will truncate prematurely and the protein will most likely be dysfunctional.  Mutations other than stop codons could also have a negative effect on the virus or it can cause resistance to an ARV.
 
 
-## Calculating genetic distances from a multiple sequence alingment (msa)
+## Calculating genetic distances from a multiple sequence alignment (MSA)
 
-In the previous seqtion we showed the general principle of a msa.  In biology sequence alingments are used to look at similarties of DNA or protein sequences.  For most phylogenetic analysis a mutliple sequence alingment is a requirement and the more  accurate the msa, the more accurate the phylogenetic inference.  
+In [part 2](https://rviews.rstudio.com/2019/05/07/pipeline-for-analysing-hiv-part-2/) we showed the general principle of a MSA.  In biology, sequence alignments are used to look at similarities of DNA or protein sequences.  For most phylogenetic analysis a multiple sequence alignment is a requirement and the more  accurate the MSA, the more accurate the phylogenetic inference.  
 
 
 Read in the multiple sequence alignment file.
@@ -159,7 +164,7 @@ aln <- read.dna('example.aln', format = 'fasta')
 ```
 
 
-Next we can calculate the distance matrix using the Kimura 2-parameter (K80) model.  There are various models which can be applied when looking at DNA substitution models, but first lets look at Marcov chains.
+Next we can calculate the distance matrix using the Kimura 2-parameter (K80) model.  There are various models which can be applied when looking at DNA substitution models, but first lets look at [Markov chains](https://en.wikipedia.org/wiki/Markov_chain).
 
 
 Below we have a table showing the probability of changing from one weather state to another depending on the current state.
@@ -178,9 +183,9 @@ tmA %>%
 ```
 
 
-This example is borrowed from [`RPubs`](https://rpubs.com/JanpuHou/326048), thank you [`Janpu Hou`](https://rpubs.com/JanpuHou) for a very clean and clearly explained blog post on the subject.
+This example is borrowed from [RPubs](https://rpubs.com/JanpuHou/326048) (thank you [Janpu Hou](https://rpubs.com/JanpuHou) for a very clean and clearly explained blog post on the subject).
 
-Next, we can plot our probabilities from above.
+Next, we can plot our probabilities from above:
 
 
 ```{r}
@@ -203,13 +208,14 @@ plotmat(tmA,pos = c(1,2),
 As you can see from the table and the diagram above, we have three states (nodes) in our example and the probability of transition or staying in a stage is indicated by the edges (lines).
 
 
-A big part of a scientist's job is to observe nature and then try to apply a model to the observation.  Think of Issac Newton and Albert Einstein, both of them had a very good model for gravity.  Arguably, Newton's model is easier to implement when you want to calculate a trajectory for launching a rocket and Einsteins model can explain why black holes bent light.  It is time for a quote:
+A big part of a scientist's job is to observe nature, and then try to apply a model to the observation.  Think of Isaac Newton and Albert Einstein, both of them had a very good model for gravity.  Arguably, Newton's model is easier to implement when you want to calculate a trajectory for launching a rocket and Einstein's model can explain why black holes bent light.  It is time for a quote:
+
+>
+> "All models are wrong, but some are useful" - [George Box](https://en.wikipedia.org/wiki/George_E._P._Box)
+>
 
 
-"All models are wrong, but some are useful" - [`George Box`](https://en.wikipedia.org/wiki/George_E._P._Box)
-
-
-This is **very** true when it comes to estimating genetic distances and phylogentic inference.  Consider the image below.
+This is **very** true when it comes to estimating genetic distances and phylogenetic inference.  Consider the image below:
 
 ```{r sumbstetutions, echo=FALSE, fig.cap="transversions vs transitions. Available at https://upload.wikimedia.org/wikipedia/commons/thumb/8/8a/All_transitions_and_transversions.svg/1024px-All_transitions_and_transversions.svg.png", out.extra='style="margin:50px 10px"', fig.align="center"}
 knitr::include_graphics(file.path(static_path, "1024px-All_transitions_and_transversions.svg.png"))
@@ -217,10 +223,10 @@ knitr::include_graphics(file.path(static_path, "1024px-All_transitions_and_trans
 
 
 
-The figure above shows transition and transversion events.  Transition between A and G (the purines) and C and T (the pyrimidines) are more likely than transversions indicated by the red arrows.  The K80 model takes this into account as one of its parameters and these rates or probabilities are calculated or estimated by maximum likelihood. 
+The figure above shows transition and transversion events.  **Transition** between **A** and **G** (the purines) and **C** and **T** (the pyrimidines) are more likely than **transversions** (indicated by the red arrows).  The K80 model takes this into account as one of its parameters and these rates or probabilities are calculated or estimated by maximum likelihood. 
 
 
-Lets see what that looks like.
+Let's see what that looks like:
 
 ```{r}
 tmDNA <- matrix(c(0.8,0.05,0.1,0.05,
@@ -256,13 +262,13 @@ plotmat(tmDNA,pos = c(2,2),
 ```
 
 
-The example above is a made up one but should explain the concept of a substitutions model.  The viral reverse transcriptase is not a random sequence generator, but it does make mistakes.  Most of the time when it is copying the RNA into DNA the base (state) stays the same.  Then also the probability of a transversion *vs* a transition is different.  If you look at the figure above where we introduced transversion and transition you will notice, that A is more similar to G and T is more similar to C in its chemical structure.
+This example is contrived,  but should explain the concept of a substitutions model.  The viral reverse transcriptase is not a random sequence generator, but it does make mistakes.  Most of the time when it is copying the RNA into DNA the base (state) stays the same.  Then also, the probability of a transversion *vs.* a transition is different.  If you look at the figure above where we introduced transversion and transition you will notice that A is more similar to G, and T is more similar to C in its chemical structure.
 
 
-There are many other substitution models, take a look at http://www.iqtree.org/doc/Substitution-Models.  It is not always trivial to select the best model for phylogenetic inference.  One technique is to run multiple maximum likelihood phylogenetic calculations using different models and then pick the model with the lowest AIC (Akaike Information Criterion).  For our pipeline, we selected the rather simple K80 model.  Since we are looking at different sets of sequences at each submission, a simple model is probably better in order to avoid the problems caused by overfitting.
+There are many other substitution models (take a look at http://www.iqtree.org/doc/Substitution-Models).  It is not always trivial to select the best model for phylogenetic inference.  One technique is to run multiple maximum likelihood phylogenetic calculations using different models and then pick the model with the lowest AIC (Akaike Information Criterion).  For our pipeline, we selected the rather simple K80 model.  Since we are looking at different sets of sequences at each submission, a simple model is probably better in order to avoid the problems caused by overfitting.
 
 
-We can use the ape package and do the distance calculations using the K80 model.
+We can use the `ape` package and calculate distances using the `K80` model.
 
 
 ```{r}
@@ -272,16 +278,15 @@ alnDist[1:5, 1:5] %>%
   kable(caption = "First few rows of our distance matrix")
 ```
 
-The matirx has a shape of 47 by 47, we just preview the first 5 rows and columns.
+The matrix has a shape of 47 by 47, we just preview the first 5 rows and columns.
 
 
-### Reduction of the heatmap to focus on the important data
+## Reduction of the heatmap to focus on the important data
 
 The pipeline mentioned uses the **Basic Local Alignment Search Tool** (BLAST) to retrieve previously sampled sequences and adds these retrieved sequences to the analysis.  [BLAST](https://blast.ncbi.nlm.nih.gov/Blast.cgi) is like a search engine you use on the web, but for protein or DNA sequences.  By doing this important sequences from retrospective samples are included which enables PhyloPi to be aware of past sequences and not just batch per batch aware.  Have a look at the [paper](https://journals.plos.org/plosone/article/comments?id=10.1371/journal.pone.0213241) for some examples.
 
 
 The data we have is ready to use for heatmap plotting purposes, but since the data also contains previously sampled sequences, comparing those sequences amongst themselves would be a distraction.  We are interested in those samples but only compared to the current batch of samples analysed.  The figures below should explain this a bit better. 
-
 
 ---
 
@@ -294,7 +299,6 @@ knitr::include_graphics(file.path(static_path, "heatmap_full.png"))
 
 From the image above you can see that, typical of a heatmap, it is symmetrical on the diagonal.  We show submitted *vs* retrieved samples in both the horizontal and vertical direction.  Notice also, as annotated as "Distraction", are the previous samples compared amongst themselves.  We are not interested in those samples now as we would already have acted on any issues then.  What we want instead, is a heatmap as depicted in the image below.
 
-
 ---
 
 ```{r focussed data, echo=FALSE, fig.cap="A diagram of a more focussed heatmap with the redundant and distracting data removed.", out.extra='style="margin:50px 10px"', fig.align="center", out.width = '50%'}
@@ -304,7 +308,7 @@ knitr::include_graphics(file.path(static_path, "heatmap_focused.png"))
 ---
 
 
-Luckily for us, we have a very powerful tool at our disposal, **R**, and plenty of really useful and convenient packages to fix this, like `dplyr`.
+Fortunately we have a very powerful tool at our disposal, **R**, and plenty of really useful and convenient packages to fix this, like `dplyr`.
 
 
 ```{r gather}
@@ -369,7 +373,7 @@ alnDistLong %>%
 
 Above we used the package [ape](http://ape-package.ird.fr/) to calculate the genetic distances for the heatmap. 
 
-Another way of looking at our alignment data is to use phylogenetic inference. The PhyloPi pipeline saves each step of phylogenetic inference to allow the user to intercept at any step.  We can use the newick tree file (a text file formatted as newick) and draw our own tree.
+Another way of looking at our alignment data is to use phylogenetic inference. The PhyloPi pipeline saves each step of phylogenetic inference to allow the user to intercept at any step.  We can use the [newick tree file](https://en.wikipedia.org/wiki/Newick_format) (a text file formatted as newick) and draw our own tree:
 
 
 ```{r, fig.height=12, fig.width=12}
@@ -385,16 +389,17 @@ nodelabels("This one", 9, frame = "r", bg = "red", adj = c(-8.2,-46))
 ```
 
 
-We have highlighted a node with a red block, with the text "This one" which we can now discuss.  We have three leaves in this node, KM050043, KM050042, KM050041 and if you would look up these accession numbers at [NCBI](https://www.ncbi.nlm.nih.gov/nuccore/KM050041.1/) you will notice the Title of the paper it is tied to:
+We have highlighted a node with a red block, with the text "This one" which we can now discuss.  We have three leaves in this node, KM050043, KM050042, KM050041 and if you would look up these accession numbers at [NCBI](https://www.ncbi.nlm.nih.gov/nuccore/KM050041.1/), you will notice the publication it is tied to:
 
-"HIV transmission. Selection bias at the heterosexual HIV-1 transmission bottleneck"
+> "HIV transmission. Selection bias at the heterosexual HIV-1 transmission bottleneck"
+>
 
-In this paper, the authors looked and selection bias when the infection is transmitted.  They found that in a pool of viral quasispecies transmission is biased to benefit the fittest viral quasispecies.  The node highlighted above shows the kind of clustering one would expect with a study like the one mentioned above.  You will also notice plenty of other nodes which you can explore using the accession number and searching for it at https://www.hiv.lanl.gov/components/sequence/HIV/search/search.html
+In this paper, the authors looked and selection bias when the infection is transmitted.  They found that in a pool of viral quasi-species transmission is biased to benefit the fittest viral quasi-species.  The node highlighted above shows the kind of clustering one would expect with a study like the one mentioned above.  You will also notice plenty of other nodes which you can explore using the accession number and searching for it at https://www.hiv.lanl.gov/components/sequence/HIV/search/search.html
 
 
-The tree above is much like a dendrogram used when displaying algoromative or hierarchical clustering.  The numbers on the tree above show the probability that the corresponding clusters are correct.  The branch lengths indicate the distances between samples.  This in conjunction with a properly coloured heatmap is very useful for finding relevant clusters to investigate.  If the reason for close clustering cannot be explained, the tests are repeated.  
+The tree above is much like a [dendrogram](https://en.wikipedia.org/wiki/Dendrogram) used when displaying [agglomerative](https://en.wikipedia.org/wiki/Hierarchical_clustering#Agglomerative_clustering_example) or [hierarchical clustering](https://en.wikipedia.org/wiki/Hierarchical_clustering).  The numbers on the tree indicate the probability that the corresponding clusters are correct.  The branch lengths indicate the distances between samples.  In conjunction with a properly coloured heatmap this is very useful for finding relevant clusters to investigate.  If the reason for close clustering cannot be explained, the tests are repeated.  
 
-The R markdown document and all the data needed to replicate these blog posts can be found at https://github.com/ArmandBester/R-in-medicine.
+## What's next
 
 In the fourth and final part of this series, we will show how we analysed the inter- and intrapatient genetic distances of HIV sequences by logistic regression.  This was useful in properly colouring our heatmap explained in this series.  See you there!
 
