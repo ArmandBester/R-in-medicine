@@ -57,22 +57,23 @@ file_path <- "."
 
 *Andrie de Vries is the author of "R for Dummies" and a Solutions Engineer at RStudio*
 
-
-## Introduction
+## Recap
 
 
 In [part 2 of this series](https://rviews.rstudio.com/2019/05/07/pipeline-for-analysing-hiv-part-2/) we discussed the [PhyloPi](https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0213241) pipeline for conducting routine HIV phylogenetics in the drug resistance testing laboratory as a part of quality control.  As mentioned, during HIV replication the error-prone viral reverse transcriptase (RT) converts its RNA genome into DNA before it can be integrated into the host cell genome.  During this conversion, the enzyme makes random mistakes in the copying process.  These mistakes or mutations can be deleterious, beneficial or may have no measurable impact on the replicative fitness of the virus.
 
-This fast rate of mutation provides enough divergence to be useful for phylogenetic analysis.  As we will see in the 4th part of this series, the intra-patient divergence is smaller than the inter-patient divergence.  As infections spread from person to person, the virus continues to mutate and become more and more divergent.  This allows us to use the genetic information we obtain while doing the drug resistance test and analyse the sequences for abnormalities.
+This fast rate of mutation provides enough divergence to be useful for phylogenetic analysis.  As we will see in the 4th part of this series, the intra-patient divergence is smaller than the inter-patient divergence.
+
+## Introduction
+
+As infections spread from person to person, the virus continues to mutate and become more and more divergent.  This allows us to use the genetic information we obtain while doing the drug resistance test and analyse the sequences for abnormalities.
 
 
 We showed how DNA sequences can be aligned and based on the composition of 'columns' in these strings a distance matrix can be calculated of each string against each.  In the example we discussed in part 2 we had a very simple method for calculating matches, ie, we used either a one or zero.  We can get closer to the truth by using substitution models as we will explain below.  In many machine learning algorithms, it is required that one first calculate the distances of each observation against each other and the choice of algorithm is up to the analyst.  Phylogenetic inference is very similar in that a distance matrix needs to be constructed on which the tree can be calculated.  
 
-
 If the sequence targeted for phylogenetic inference is very stable with little or no evolution, the distances calculated will be zero or very close to it.  This will not allow for differentiation.  However, as we mentioned, HIV has a very fast rate of evolution due to its error-prone reverse transcriptase.
 
-
-[Cuevas](https://journals.plos.org/plosbiology/article?id=10.1371/journal.pbio.1002251) *et al.* (2015) published work on the *in vivo* rate of HIV evolution.  Their analysis revealed the highest mutation rate of any biological entity of $4.1 \cdot 10^{-3} (sd=1.7 \cdot 10^{-3})$.  However, the error-prone reverse transcriptase is not the only mechanism of mutation.  One defence against HIV infection is an enzyme called apolipoprotein B mRNA editing enzyme, catalytic polypeptide-like or [APOBEC](https://en.wikipedia.org/wiki/APOBEC3G).  These enzymes act on RNA and converts or mutates cytidine to uridine (uridine in RNA is the thymadine couterpart in DNA).  This results in a G to A mutations the the cDNA.
+[Cuevas](https://journals.plos.org/plosbiology/article?id=10.1371/journal.pbio.1002251) *et al.* (2015) published work on the *in vivo* rate of HIV evolution.  Their analysis revealed the highest mutation rate of any biological entity of $4.1 \cdot 10^{-3}$ ($sd=1.7 \cdot 10^{-3}$).  However, the error-prone reverse transcriptase is not the only mechanism of mutation.  One defence against HIV infection is an enzyme called apolipoprotein B mRNA editing enzyme, catalytic polypeptide-like or **[APOBEC](https://en.wikipedia.org/wiki/APOBEC3G)**.  These enzymes act on RNA and converts or mutates cytidine to uridine (uridine in RNA is the thymadine couterpart in DNA).  This results in a G to A mutations the the cDNA.
 
 
 Also, shown by Cuevas *et al*, these enzymes are not equally active in all people. On the other hand, the viral Vif protein inhibits this hypermutation by 'tagging' the APOBEC protein with ubiquinone for degradation by the cytoplasmic ubiquitin-dependent proteasome machinery.
@@ -414,24 +415,19 @@ The tree above is much like a [dendrogram](https://en.wikipedia.org/wiki/Dendrog
 Phylogenetics and thus genetic distance calculations are used in many branches of biology.  For us, it is one of the quality control measures to our disposal, but it has been used for the reconstruction of the origin of HIV.  You may find the research papers listed below interesting where the authors used phylogenetics to infer the zoonotic origins of HIV.
 
 
-  * [`Paul M. Sharp and Beatrice H. Hahn`](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3234451/)
+  * [Paul M. Sharp and Beatrice H. Hahn](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3234451/)
   
-  * [`Beatrice H. Hahn`](https://science.sciencemag.org/content/287/5453/607.long) *et al*
- 
+  * [Beatrice H. Hahn et al](https://science.sciencemag.org/content/287/5453/607.long)
+
+Another example, in 1998 six foreign medical workers were accused of deliberately infecting hospitalized children with HIV and were sentenced to [death](https://en.wikipedia.org/wiki/HIV_trial_in_Libya).  In 2006, [de Oliveira et al](https://www.nature.com/articles/444836a) used phylogenetics to provide evidence that the origin of the HIV strains which infected the children had an evolutionary history in the mid-90s which was before the health care workers arrived in 1998.  The six medics were 'released' in 2007.  There is also a very good writeup on the case by [Declan Butler](https://www.nature.com/articles/444658b).  Although probably very emotional, this can be a great movie.
 
 
-Another example, in 1998 six foreign medical workers were accused of deliberately infecting hospitalized children with HIV and were sentenced to [`death`](https://en.wikipedia.org/wiki/HIV_trial_in_Libya).  In 2006 [`de Oliveira`](https://www.nature.com/articles/444836a) *et al* used phylogenetics to provide evidence that the origin of the HIV strains which infected the children had an evolutionary history in the mid-90s which was before the health care workers arrived in 1998.  The six medics were 'released' in 2007.  There is also a very good writeup on the case by [`Declan Butler`](https://www.nature.com/articles/444658b).  Although probably very emotional, this can be a great movie.
-
-
-Then also, these techniques are also used in criminal convictions.  However, the interpretation of this kind of evidence in court cases can be unsafe.  The insights of [`Pillay`](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC1971185/) *et al* should bring this to light.
-
-
-I hope you enjoyed this section.
+Then also, these techniques are also used in criminal convictions.  However, the interpretation of this kind of evidence in court cases can be unsafe.  The insights of [Pillay et al](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC1971185/) should bring this to light.
 
 
 ## What's next
 
-In the fourth and final part of this series, we will show how we analysed the inter- and intrapatient genetic distances of HIV sequences by logistic regression.  This was useful in properly colouring our heatmap explained in this series.  See you there!
+In the fourth and final part of this series, we will show how we analysed the inter- and intra-patient genetic distances of HIV sequences by logistic regression.  This was useful in properly colouring our heatmap explained in this series.  See you there!
 
 
 
