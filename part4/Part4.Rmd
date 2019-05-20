@@ -41,27 +41,22 @@ file_path <- "."
 
 ```
 
+In this post we complete our series on analysing the HIV pandemic in Africa.  Previously we covered the bigger picture of HIV infection in Africa, and a pipeline for analysing HIV samples in the lab.
 
-## Introduction
+Then, in part 3 we saw that it can happen that the same patient's genotype must be repeatedly analysed in the lab, from samples that can be taken years apart.
 
+>  Let's say we have genotyped a patient five years ago and we have a current genotype sequence.  It should be possible to retrieve the previous sequence from a database of sequences without relying on identifiers only or at all.  Sometimes when someone remarries they may change their surname or transcription errors can be made which makes finding previous samples tedious and error-prone.  So instead of using patient information to look for previous samples to include, we can rather use the sequence data itself and then confirm the sequences belong to the same patient or investigate any irregularities.  If we suspect mother to child transmission from our analysis, we confirm this with the health care worker who sent the sample.  
 
-The goal of the project is to find a way to tell whether two genetic samples are from the same person or from two different people.
+In this final part we discuss how the inter- and intrapatient HIV genetic distances were analyzed using logistic regression to gain insights into the probability distribution of these two classes.
+
+Thus, the goal of the project is to find a way to tell whether two genetic samples are from the same person or from two different people.
 
 Samples from the same person can have slightly different genetic sequences, due to mutations and other errors. This is especially problematic in comparing samples of genetic material from retro-active viruses.
-
-To help answer this question, we downloaded data from the Los Alamos HIV database, subtype C, POL CDS.
-
-This document:
-
-* plots the data
-* describes a simple machine learning model to differentiate between different samples (intra- and inter-patient).
 
 
 ## Read the data
 
-The data is in two csv files, for intra and inter patient observations. Each observation is the (dis)similary distance between different samples.
-
-Start by reading the data and combining into a single object.
+To help answer this question, we downloaded data from the Los Alamos HIV database (*subtype C, POL CDS*).  The data is in two csv files, for intra and inter patient observations. Each observation is the (dis)similarity distance between different samples.
 
 ```{r load, message=FALSE}
 library(readr)
@@ -76,7 +71,7 @@ pt_distance <-
 head(pt_distance)
 ```
 
-## Plot the data
+## Initial investigation
 
 Next, plot a histogram of the distance between samples.  This clearly shows that the distance between samples of the same subject (intra-patient) is smaller than the distance between different subjects (inter-patient).  This is not surprising.
 
@@ -103,7 +98,7 @@ pt_distance %>%
 
 Since we have **two** sample types (intra-patient vs inter-patient), this is a binary classification problem.
 
-[Logistic regression](https://en.wikipedia.org/wiki/Logistic_regression) is a simple algorithm for binary classification, and a special case of a [generalized linear model](https://en.wikipedia.org/wiki/Generalized_linear_model).  In **R** you can use the `glm()` function to fit a generalized linear model, and to specify a logisitic regression, use the `family = binomial` argument.
+[Logistic regression](https://en.wikipedia.org/wiki/Logistic_regression) is a simple algorithm for binary classification, and a special case of a [generalized linear model](https://en.wikipedia.org/wiki/Generalized_linear_model) (**GLM**).  In **R** you can use the `glm()` function to fit a GLM, and to specify a logsitic regression, use the `family = binomial` argument.
 
 In this case we want to  train a model with `distance` as independent variable, and `type` the dependent variable, i.e. `type ~ distance`.
 
@@ -121,13 +116,13 @@ model <- glm(type ~ distance, data = pt_sample, family = binomial)
 
 However, in this case the numerical problems doesn't actually cause a practical problem with model itself.
 
-The model summary tells us that the `distance` variable is highly significant (indicated by the ***).
+The model summary tells us that the `distance` variable is highly significant (indicated by the ***):
 
 ```{r model_summary}
 summary(model)
 ```
 
-Now we can use the model to compute a prediction for some distances (from 0 to 0.15) and create a plot.
+Now we can use the model to compute a prediction for a range of genetic distances (from 0 to 0.05) and create a plot.
 
 ```{r predict}
 newdata <-  data.frame(distance = seq(0, 0.05, by = 0.001))
@@ -135,26 +130,27 @@ pred <- predict(model, newdata, type = "response")
 ```
 
 ```{r predictionplot}
-plot_sample <- 
-  pt_sample %>% 
-  filter(distance <= 0.05)
-
 plot_inter <- 
   pt_sample %>% 
-  filter(distance <= 0.05, type == "Inter")
+  filter(distance <= 0.05, type == "Inter") %>% 
+  sample_n(2000)
   
 plot_intra <- 
   pt_sample %>% 
-  filter(distance <= 0.05, type == "Intra")
+  filter(distance <= 0.05, type == "Intra") %>% 
+  sample_n(2000)
+
+threshold <-  with(newdata, approx(pred, distance, xout = 0.5))$y
 
 ggplot() +
-  geom_point(data = plot_inter, aes(x = distance, y = 0), alpha = 0.01, col = "blue") +
-  geom_point(data = plot_intra, aes(x = distance, y = 1), alpha = 0.01, col = "red") +
+  geom_point(data = plot_inter, aes(x = distance, y = 0), alpha = 0.05, col = "blue") +
+  geom_point(data = plot_intra, aes(x = distance, y = 1), alpha = 0.05, col = "red") +
   geom_rug(data = plot_inter, aes(x = distance, y = 0), col = "blue") +
   geom_rug(data = plot_intra, aes(x = distance, y = 0), col = "red") +
   geom_line(data = newdata, aes(x = distance, y = pred)) +
   annotate(x = 0.005, y = 0.9, label = "Type == intra", geom = "text", col = "red") +
   annotate(x = 0.04, y = 0.1, label = "Type == inter", geom = "text", col = "blue") +
+  geom_vline(xintercept = threshold, col = "grey50") +
   ggtitle("Model results", subtitle = "Predicted probability that Type == 'Intra'") +
   xlab("Phylogenetic distance") +
   ylab("Probability")
@@ -162,9 +158,27 @@ ggplot() +
 
 Logistic regression essentially fits an s-curve that indicates the probability.  In this case, for small distances (lower than  ~0.01) the probability of being the same person (i.e. type is intra) is almost 100%.  For distances greater than 0.03 the probability of being type intra is almost zero (i.e. the model predicts type inter).
 
-The model puts the distance threshold at approximately 0.025.
+The model puts the distance threshold at approximately  `r round(threshold, 3)`.
+
+## The practical value of this work
+
+In part 2 we discussed how the researches at the [University of the Free State](https://www.ufs.ac.za) developed an automated pipeline of phylogenetic analysis. The project was designed to run on the Raspberry Pi, a very low cost computing device. This meant that the cost of implementation of the project is low, and the project has been implemented at all the sites of the [National Health Laboratory Service (NHLS)](http://www.nhls.ac.za/) in South Africa.
+
+In this part we described the very simple logistic regression model that runs as part of the pipeline.  In addition to the descriptive analysis, e.g. heatmaps and trees (as described in part 3), this logistic regression makes a prediction whether two samples were obtained from the same person, or from two different people. This prediction is helpful in allowing the laboratory staff identify potential contamination of samples, or indeed to match samples from people who weren't matched properly by their name and other identifying information (e.g. through spelling mistakes or name changes.)
+
+Finally, it's interesting to note that traditionally the decision whether two samples were intra-patient or inter-patient was made on heuristics, instead of modelling.  For example, a heuristic might say that if the genetic distance between two samples is less than 0.01, they should be considered a match from a single person. 
+
+Heuristics are easy to implement in the lab, but sometimes it can happen that the origin of the original heuristic gets lost.  This means that it's possible that the heurist is no longer applicable for the sample population.
+
+This modelling gave the researchers a tool to establish confidence intervals around predictions. In addition, it is now possible to repeat the model for many different local sample populations of interest, and thus have a tool that is better able to discriminate given the most recent data.
 
 
 ## Conclusion
 
-More work to be done here...
+In this multi part series of HIV in Africa we covered four topics:
+
+* In part 1 we analysed the incidence of HIV in sub-Sahara Africa, with special mention of the effect of the wide-spread availability of anti-retroviral (ARV) drugs during 2004.  Since then, there was a rapid decine in HIV infection rates in South Africa.
+* In part 2 we described the PhyloPi project - a phylogenetic pipeline to analyse HIV in the lab, available for the low-cost RaspBerry Pi.    This work as published in the [PLoS ONE journal](<https://journals.plos.org/plosone/>): "[PhyloPi: An affordable, purpose built phylogenetic pipeline for the HIV drug resistance testing facility](https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0213241)"
+* Then, part 3 described the biological mechanism how the HIV virus mutates, and how this can be modelled using a markov chain, and visualized as heat maps and phylogenetic trees.
+* This final part covered how we used a very simple logistic regression model to identify if two samples in the lab came from the same person or two different people.
+
