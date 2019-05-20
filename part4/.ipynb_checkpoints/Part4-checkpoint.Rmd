@@ -1,0 +1,170 @@
+---
+title: 'Analysing the HIV pandemic, Part 4: Logistic regression'
+author: Andrie de Vries and Armand Bester 
+date: '2019-05-21'
+slug: pipeline-for-analysing-hiv-part-4
+categories:
+  - R Language
+  - R in Medicine
+tags:
+  - Medicine
+  - R/Medicine
+  - HIV/AIDS
+summary: "This is part 4 of a four-part series about the HIV epidemic in Africa. In this final part, we discuss how genetic diversity can be used to analyse inter- and intra- patient sequence classification using logistic regression."
+---
+
+*Andrie de Vries is the author of "R for Dummies" and a Solutions Engineer at RStudio*
+
+*Phillip (Armand) Bester is a medical scientist, researcher, and lecturer at the [Division of Virology](https://www.ufs.ac.za/health/departments-and-divisions/virology-home), [University of the Free State](https://www.ufs.ac.za), and [National Health Laboratory Service (NHLS)](http://www.nhls.ac.za/), Bloemfontein, South Africa*
+
+```{r setup, include=FALSE}
+# packages required for this post
+local({
+  # CRAN
+  pkgs <- c(
+    "readr",
+    "ggplot2",
+    "dplyr"
+  )
+
+  not_installed <- setdiff(pkgs, as.data.frame(installed.packages())$Package)
+  if (length(not_installed)) {
+    install.packages(not_installed)
+  }
+
+})
+knitr::opts_chunk$set(echo = TRUE)
+
+static_path <- "/post/2019-05-21-analysis-hiv-pandemic-part-4_files"
+static_path <- "."
+file_path <- "."
+
+```
+
+
+## Introduction
+
+
+The goal of the project is to find a way to tell whether two genetic samples are from the same person or from two different people.
+
+Samples from the same person can have slightly different genetic sequences, due to mutations and other errors. This is especially problematic in comparing samples of genetic material from retro-active viruses.
+
+To help answer this question, we downloaded data from the Los Alamos HIV database, subtype C, POL CDS.
+
+This document:
+
+* plots the data
+* describes a simple machine learning model to differentiate between different samples (intra- and inter-patient).
+
+
+## Read the data
+
+The data is in two csv files, for intra and inter patient observations. Each observation is the (dis)similary distance between different samples.
+
+Start by reading the data and combining into a single object.
+
+```{r load, message=FALSE}
+library(readr)
+library(dplyr)
+library(ggplot2)
+```
+
+```{r import, warning=FALSE}
+pt_distance <- 
+  read_csv("dist_sample_10.csv.zip", col_types = "ccdccf")
+
+head(pt_distance)
+```
+
+## Plot the data
+
+Next, plot a histogram of the distance between samples.  This clearly shows that the distance between samples of the same subject (intra-patient) is smaller than the distance between different subjects (inter-patient).  This is not surprising.
+
+However, from the histogram it is also clear that there is not a clear demarcation between these types.  Simply eye-balling the data seems to indicate that one could use an arbitrary threshold of around 0.025 to indicate whether the sample is from the same person or different people.
+
+
+
+```{r histogram}
+pt_distance %>% 
+  mutate(
+    type = forcats::fct_rev(type)
+  ) %>% 
+  ggplot(aes(x = distance, fill = type)) +
+  geom_histogram(binwidth = 0.001) +
+  facet_grid(rows = vars(type), scales = "free_y") +
+  scale_fill_manual(values = c("red", "blue")) +
+  coord_cartesian(xlim = c(0, 0.1)) +
+  ggtitle("Histogram of phylogenetic distance by type")
+```
+
+
+
+## Modeling
+
+Since we have **two** sample types (intra-patient vs inter-patient), this is a binary classification problem.
+
+[Logistic regression](https://en.wikipedia.org/wiki/Logistic_regression) is a simple algorithm for binary classification, and a special case of a [generalized linear model](https://en.wikipedia.org/wiki/Generalized_linear_model).  In **R** you can use the `glm()` function to fit a generalized linear model, and to specify a logisitic regression, use the `family = binomial` argument.
+
+In this case we want to  train a model with `distance` as independent variable, and `type` the dependent variable, i.e. `type ~ distance`.
+
+We train on 100,000 observations purely to reduce computation time:
+
+
+```{r model, message=FALSE}
+pt_sample <- 
+  pt_distance %>% 
+  sample_n(1e5)
+model <- glm(type ~ distance, data = pt_sample, family = binomial)
+```
+
+(Note that sometimes the model throws a warning indicating numerical problems.  This happens because the overlap between intra and inter is very small.  If there is a very sharp dividing line between classes, the logistic regression algorithm has problems to converge.)
+
+However, in this case the numerical problems doesn't actually cause a practical problem with model itself.
+
+The model summary tells us that the `distance` variable is highly significant (indicated by the ***).
+
+```{r model_summary}
+summary(model)
+```
+
+Now we can use the model to compute a prediction for some distances (from 0 to 0.15) and create a plot.
+
+```{r predict}
+newdata <-  data.frame(distance = seq(0, 0.05, by = 0.001))
+pred <- predict(model, newdata, type = "response")
+```
+
+```{r predictionplot}
+plot_sample <- 
+  pt_sample %>% 
+  filter(distance <= 0.05)
+
+plot_inter <- 
+  pt_sample %>% 
+  filter(distance <= 0.05, type == "Inter")
+  
+plot_intra <- 
+  pt_sample %>% 
+  filter(distance <= 0.05, type == "Intra")
+
+ggplot() +
+  geom_point(data = plot_inter, aes(x = distance, y = 0), alpha = 0.01, col = "blue") +
+  geom_point(data = plot_intra, aes(x = distance, y = 1), alpha = 0.01, col = "red") +
+  geom_rug(data = plot_inter, aes(x = distance, y = 0), col = "blue") +
+  geom_rug(data = plot_intra, aes(x = distance, y = 0), col = "red") +
+  geom_line(data = newdata, aes(x = distance, y = pred)) +
+  annotate(x = 0.005, y = 0.9, label = "Type == intra", geom = "text", col = "red") +
+  annotate(x = 0.04, y = 0.1, label = "Type == inter", geom = "text", col = "blue") +
+  ggtitle("Model results", subtitle = "Predicted probability that Type == 'Intra'") +
+  xlab("Phylogenetic distance") +
+  ylab("Probability")
+```
+
+Logistic regression essentially fits an s-curve that indicates the probability.  In this case, for small distances (lower than  ~0.01) the probability of being the same person (i.e. type is intra) is almost 100%.  For distances greater than 0.03 the probability of being type intra is almost zero (i.e. the model predicts type inter).
+
+The model puts the distance threshold at approximately 0.025.
+
+
+## Conclusion
+
+More work to be done here...

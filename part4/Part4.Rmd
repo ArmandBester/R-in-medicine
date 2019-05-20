@@ -51,7 +51,7 @@ In this final part we discuss how the inter- and intrapatient HIV genetic distan
 
 Thus, the goal of the project is to find a way to tell whether two genetic samples are from the same person or from two different people.
 
-Samples from the same person can have slightly different genetic sequences, due to mutations and other errors. This is especially problematic in comparing samples of genetic material from retro-active viruses.
+Samples from the same person can have slightly different genetic sequences, due to mutations and other errors. This is especially useful in comparing samples of genetic material from retroviruses.
 
 
 ## Read the data
@@ -162,7 +162,7 @@ The model puts the distance threshold at approximately  `r round(threshold, 3)`.
 
 ## The practical value of this work
 
-In part 2 we discussed how the researches at the [University of the Free State](https://www.ufs.ac.za) developed an automated pipeline of phylogenetic analysis. The project was designed to run on the Raspberry Pi, a very low cost computing device. This meant that the cost of implementation of the project is low, and the project has been implemented at all the sites of the [National Health Laboratory Service (NHLS)](http://www.nhls.ac.za/) in South Africa.
+In part 2 we discussed how [`researches`](https://journals.plos.org/plosone/article/authors?id=10.1371/journal.pone.0213241) developed an automated pipeline of phylogenetic analysis. The project was designed to run on the Raspberry Pi, a very low cost computing device. This meant that the cost of implementation of the project is low, and the project has been implemented at the [National Health Laboratory Service (NHLS)](http://www.nhls.ac.za/) in South Africa.
 
 In this part we described the very simple logistic regression model that runs as part of the pipeline.  In addition to the descriptive analysis, e.g. heatmaps and trees (as described in part 3), this logistic regression makes a prediction whether two samples were obtained from the same person, or from two different people. This prediction is helpful in allowing the laboratory staff identify potential contamination of samples, or indeed to match samples from people who weren't matched properly by their name and other identifying information (e.g. through spelling mistakes or name changes.)
 
@@ -181,4 +181,15 @@ In this multi part series of HIV in Africa we covered four topics:
 * In part 2 we described the PhyloPi project - a phylogenetic pipeline to analyse HIV in the lab, available for the low-cost RaspBerry Pi.    This work as published in the [PLoS ONE journal](<https://journals.plos.org/plosone/>): "[PhyloPi: An affordable, purpose built phylogenetic pipeline for the HIV drug resistance testing facility](https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0213241)"
 * Then, part 3 described the biological mechanism how the HIV virus mutates, and how this can be modelled using a markov chain, and visualized as heat maps and phylogenetic trees.
 * This final part covered how we used a very simple logistic regression model to identify if two samples in the lab came from the same person or two different people.
+
+##Closing thoughts and tributes
+
+Dear readers
+
+I hope that you enjoyed this series on 'Analysing the HIV pandemic' using R and some of the tools available as part of [`tidyverse`](https://www.tidyverse.org/) packages.  Learning R provided me not only with a toolset to analyse data problems but also a [`community`](https://stackoverflow.com/questions/tagged/r).  Being a biologist, I was not sure of the best approach for solving the problem of inter- and intrapatient genetic distances.  I contacted Andrie from [`Rstudio`](https://resources.rstudio.com/authors/andres-de-veris) and not only did he help us with this, but he was also excited in about it.  It was a pleasure telling you about our journey on this blog site, but it was a privilege doing this with experts.
+
+Armand
+
+
+
 
