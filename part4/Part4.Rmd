@@ -1,5 +1,5 @@
 ---
-title: 'Analysing the HIV pandemic, Part 4: Logistic regression'
+title: 'Analysing the HIV pandemic, Part 4: Classification of lab samples'
 author: Andrie de Vries and Armand Bester 
 date: '2019-05-21'
 slug: pipeline-for-analysing-hiv-part-4
@@ -10,7 +10,7 @@ tags:
   - Medicine
   - R/Medicine
   - HIV/AIDS
-summary: "This is part 4 of a four-part series about the HIV epidemic in Africa. In this final part, we discuss how genetic diversity can be used to analyse inter- and intra- patient sequence classification using logistic regression."
+summary: "This is part 4 of a four-part series about the HIV epidemic in Africa. In this final part, we discuss how genetic diversity can be used to classify laboratory samples into either inter-patient or intra- classes, using logistic regression. This helps with quality in the lab, since it's possible to match new samples with samples from the same patient, taken years apart and allowing for mutation of the HIV virus genomic sequence."
 ---
 
 *Andrie de Vries is the author of "R for Dummies" and a Solutions Engineer at RStudio*
@@ -41,22 +41,22 @@ file_path <- "."
 
 ```
 
-In this post we complete our series on analysing the HIV pandemic in Africa.  Previously we covered the bigger picture of HIV infection in Africa, and a pipeline for analysing HIV samples in the lab.
+In this post we complete our series on analysing the HIV pandemic in Africa.  Previously we covered the bigger picture of [HIV infection in Africa](https://rviews.rstudio.com/2019/04/30/analysing-hiv-pandemic-part-1/), and a [pipeline for drug resistance testing](https://rviews.rstudio.com/2019/05/07/pipeline-for-analysing-hiv-part-2/) of samples in the lab.
 
-Then, in part 3 we saw that it can happen that the same patient's genotype must be repeatedly analysed in the lab, from samples that can be taken years apart.
+Then, in [part 3](https://rviews.rstudio.com/2019/05/16/pipeline-for-analysing-hiv-part-3/) we saw that it sometimes the same patient's genotype must be repeatedly analysed in the lab, from samples taken years apart.
 
 >  Let's say we have genotyped a patient five years ago and we have a current genotype sequence.  It should be possible to retrieve the previous sequence from a database of sequences without relying on identifiers only or at all.  Sometimes when someone remarries they may change their surname or transcription errors can be made which makes finding previous samples tedious and error-prone.  So instead of using patient information to look for previous samples to include, we can rather use the sequence data itself and then confirm the sequences belong to the same patient or investigate any irregularities.  If we suspect mother to child transmission from our analysis, we confirm this with the health care worker who sent the sample.  
 
-In this final part we discuss how the inter- and intrapatient HIV genetic distances were analyzed using logistic regression to gain insights into the probability distribution of these two classes.
-
-Thus, the goal of the project is to find a way to tell whether two genetic samples are from the same person or from two different people.
+In this final part we discuss how the inter- and intrapatient HIV genetic distances were analyzed using logistic regression to gain insights into the probability distribution of these two classes. In other words, the goal is to find a way to tell whether two genetic samples are from the same person or from two different people.
 
 Samples from the same person can have slightly different genetic sequences, due to mutations and other errors. This is especially useful in comparing samples of genetic material from retroviruses.
 
 
-## Read the data
+## Preliminary analysis
 
-To help answer this question, we downloaded data from the Los Alamos HIV database (*subtype C, POL CDS*).  The data is in two csv files, for intra and inter patient observations. Each observation is the (dis)similarity distance between different samples.
+To help answer this question, we downloaded data from the [Los Alamos HIV sequence database](https://www.hiv.lanl.gov/content/sequence/HIV/mainpage.html) ( specifically *Virus HIV-1, subtype C, genetic region POL CDS*).
+
+Each observation is the (dis)similarity distance between different samples.
 
 ```{r load, message=FALSE}
 library(readr)
@@ -70,8 +70,6 @@ pt_distance <-
 
 head(pt_distance)
 ```
-
-## Initial investigation
 
 Next, plot a histogram of the distance between samples.  This clearly shows that the distance between samples of the same subject (intra-patient) is smaller than the distance between different subjects (inter-patient).  This is not surprising.
 
@@ -102,7 +100,7 @@ Since we have **two** sample types (intra-patient vs inter-patient), this is a b
 
 In this case we want to  train a model with `distance` as independent variable, and `type` the dependent variable, i.e. `type ~ distance`.
 
-We train on 100,000 observations purely to reduce computation time:
+We train on 100,000 (`n = 1e5`) observations purely to reduce computation time:
 
 
 ```{r model, message=FALSE}
@@ -162,31 +160,31 @@ The model puts the distance threshold at approximately  `r round(threshold, 3)`.
 
 ## The practical value of this work
 
-In part 2 we discussed how [`researches`](https://journals.plos.org/plosone/article/authors?id=10.1371/journal.pone.0213241) developed an automated pipeline of phylogenetic analysis. The project was designed to run on the Raspberry Pi, a very low cost computing device. This meant that the cost of implementation of the project is low, and the project has been implemented at the [National Health Laboratory Service (NHLS)](http://www.nhls.ac.za/) in South Africa.
+In part 2 we discussed how [researchers](https://journals.plos.org/plosone/article/authors?id=10.1371/journal.pone.0213241) developed an automated pipeline of phylogenetic analysis. The project was designed to run on the Raspberry Pi, a very low cost computing device. This meant that the cost of implementation of the project is low, and the project has been implemented at the [National Health Laboratory Service (NHLS)](http://www.nhls.ac.za/) in South Africa.
 
 In this part we described the very simple logistic regression model that runs as part of the pipeline.  In addition to the descriptive analysis, e.g. heatmaps and trees (as described in part 3), this logistic regression makes a prediction whether two samples were obtained from the same person, or from two different people. This prediction is helpful in allowing the laboratory staff identify potential contamination of samples, or indeed to match samples from people who weren't matched properly by their name and other identifying information (e.g. through spelling mistakes or name changes.)
 
 Finally, it's interesting to note that traditionally the decision whether two samples were intra-patient or inter-patient was made on heuristics, instead of modelling.  For example, a heuristic might say that if the genetic distance between two samples is less than 0.01, they should be considered a match from a single person. 
 
-Heuristics are easy to implement in the lab, but sometimes it can happen that the origin of the original heuristic gets lost.  This means that it's possible that the heurist is no longer applicable for the sample population.
+Heuristics are easy to implement in the lab, but sometimes it can happen that the origin of the original heuristic gets lost.  This means that it's possible that the heurist is no longer applicable to the sample population.
 
 This modelling gave the researchers a tool to establish confidence intervals around predictions. In addition, it is now possible to repeat the model for many different local sample populations of interest, and thus have a tool that is better able to discriminate given the most recent data.
 
 
 ## Conclusion
 
-In this multi part series of HIV in Africa we covered four topics:
+In this multi-part series of HIV in Africa we covered four topics:
 
-* In part 1 we analysed the incidence of HIV in sub-Sahara Africa, with special mention of the effect of the wide-spread availability of anti-retroviral (ARV) drugs during 2004.  Since then, there was a rapid decine in HIV infection rates in South Africa.
-* In part 2 we described the PhyloPi project - a phylogenetic pipeline to analyse HIV in the lab, available for the low-cost RaspBerry Pi.    This work as published in the [PLoS ONE journal](<https://journals.plos.org/plosone/>): "[PhyloPi: An affordable, purpose built phylogenetic pipeline for the HIV drug resistance testing facility](https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0213241)"
-* Then, part 3 described the biological mechanism how the HIV virus mutates, and how this can be modelled using a markov chain, and visualized as heat maps and phylogenetic trees.
+* In [part 1](https://rviews.rstudio.com/2019/04/30/analysing-hiv-pandemic-part-1/) we analysed the incidence of HIV in sub-Sahara Africa, with special mention of the effect of the wide-spread availability of anti-retroviral (ARV) drugs during 2004.  Since then, there was a rapid decine in HIV infection rates in South Africa.
+* In [part 2](https://rviews.rstudio.com/2019/05/16/pipeline-for-analysing-hiv-part-2/) we described the PhyloPi project - a phylogenetic pipeline to analyse HIV in the lab, available for the low-cost RaspBerry Pi.    This work as published in the [PLoS ONE journal](<https://journals.plos.org/plosone/>): "[PhyloPi: An affordable, purpose built phylogenetic pipeline for the HIV drug resistance testing facility](https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0213241)"
+* Then, [part 3](https://rviews.rstudio.com/2019/05/16/pipeline-for-analysing-hiv-part-3/) described the biological mechanism how the HIV virus mutates, and how this can be modelled using a markov chain, and visualized as heat maps and phylogenetic trees.
 * This final part covered how we used a very simple logistic regression model to identify if two samples in the lab came from the same person or two different people.
 
-##Closing thoughts and tributes
+##Closing thoughts
 
 Dear readers
 
-I hope that you enjoyed this series on 'Analysing the HIV pandemic' using R and some of the tools available as part of [`tidyverse`](https://www.tidyverse.org/) packages.  Learning R provided me not only with a toolset to analyse data problems but also a [`community`](https://stackoverflow.com/questions/tagged/r).  Being a biologist, I was not sure of the best approach for solving the problem of inter- and intrapatient genetic distances.  I contacted Andrie from [`Rstudio`](https://resources.rstudio.com/authors/andres-de-veris) and not only did he help us with this, but he was also excited in about it.  It was a pleasure telling you about our journey on this blog site, but it was a privilege doing this with experts.
+I hope that you enjoyed this series on 'Analysing the HIV pandemic' using R and some of the tools available as part of [`tidyverse`](https://www.tidyverse.org/) packages.  Learning R provided me not only with a toolset to analyse data problems but also a [community](https://stackoverflow.com/questions/tagged/r).  Being a biologist, I was not sure of the best approach for solving the problem of inter- and intrapatient genetic distances.  I contacted Andrie from [Rstudio](https://resources.rstudio.com/authors/andrie-de-vries) and not only did he help us with this, but he was also excited in about it.  It was a pleasure telling you about our journey on this blog site, and a privilege doing this with experts.
 
 Armand
 
